@@ -1,6 +1,6 @@
 {
   "name": "sidequests",
-  "description": "A grab-bag of witty helper tools, born as side quests. Includes photo-reconciler (Google Photos -> iCloud with no duplicates) and source-finder (identify the song/source playing in a video or audio clip).",
+  "description": "A grab-bag of helper tools, born as side quests. Includes photo-reconciler (Google Photos -> iCloud with no duplicates) and source-finder (identify the song/source playing in a video or audio clip).",
   "version": "0.1.0",
   "author": { "name": "navyas321" },
   "homepage": "https://github.com/navyas321/sidequests",

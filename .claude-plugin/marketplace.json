@@ -1,7 +1,7 @@
 {
   "name": "sidequests",
   "owner": { "name": "navyas321" },
-  "description": "Witty helper tools born as side quests.",
+  "description": "Helper tools born as side quests.",
   "plugins": [
     {
       "name": "sidequests",

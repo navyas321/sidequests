@@ -1,77 +1,207 @@
 # sidequests
 
-> A grab-bag of witty helper tools — born as *side quests* while solving
+> A grab-bag of helper tools — each one born as a *side quest* while solving
 > something else.
 
-Each tool is packaged as a [Claude Code](https://code.claude.com) **skill**
-(a runbook the agent follows, with bundled Python scripts), but every script
-also runs perfectly well on its own from the command line. Use them with Claude,
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
+
+Every tool is packaged as a [Claude Code](https://code.claude.com) **skill** — a
+runbook the agent follows, with bundled Python scripts — but each script also
+runs perfectly well on its own from the command line. Use them through Claude,
 or just `python` them directly.
 
-## The tools
+---
 
-### 📷 `photo-reconciler` — Google Photos → iCloud, no duplicates
-Reconciles a Google Photos album export (a zip of media) against your existing
-Apple iCloud library and uploads **only the genuinely-missing** photos/videos —
-no duplicates. Perceptual hashing (with the all-important **HEIC** fix),
-internal de-duplication, threaded on-demand hashing, collision-safe staging into
-the iCloud-for-Windows folder, and a verification pass. Knows the sharp edges:
-HEIC decoding, cloud-file hydration/dehydration, the v14+ upload mechanism, disk
-management, and the fact that the filesystem *can't* confirm an upload (only the
-iCloud app / icloud.com can). *Windows + iCloud for Windows.*
+## Contents
 
-### 🎵 `source-finder` — what's that song?
-Give it a video or audio clip and it identifies the song/media and returns the
-source (artist + title + link). It's a **fallback ladder**, because acoustic
-fingerprinting (Shazam) only matches studio originals:
+| Tool | What it does | Platform |
+| --- | --- | --- |
+| 🎵 **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) | Any OS |
+| 📷 **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's missing — no duplicates | Windows + iCloud for Windows |
 
-1. **Read the video frames** — on-screen text, branding, or a live chat guessing the song.
-2. **Acoustic fingerprint** (Shazam) — for studio originals.
-3. **Transcribe the lyrics** (Whisper, with EQ + vocal isolation) — works for *covers*, since it's the words, not the recording.
-4. **Web-search the lyrics** and cross-reference everything — then **verify**.
+---
 
-> Built the day Shazam *failed* on a clip — which turned out to be a streamer's
-> own original song. Fingerprinting couldn't know it; the lyrics could.
+## Requirements
 
-## Install (as a Claude Code plugin)
+- **Python 3.10+**
+- Each tool has its own `requirements.txt`. `ffmpeg` is bundled via
+  `imageio-ffmpeg`, so there's **no system ffmpeg install** to worry about.
+- `source-finder` is cross-platform. `photo-reconciler`'s staging/dehydration
+  bits are Windows + "iCloud for Windows"; its hashing core is portable.
+
+---
+
+## Installation
+
+### As a Claude Code plugin (recommended)
 
 ```text
 /plugin marketplace add navyas321/sidequests
 /plugin install sidequests@sidequests
 ```
 
-Then just ask Claude *"what's the song in this clip?"* (with a file), or run
-`/photo-reconciler path/to/export.zip`.
-
-## Use standalone (no Claude)
+Skills load at **session start**, so open a **new Claude Code session** after
+installing. Then type `/` and you'll see `source-finder` and `photo-reconciler`
+in the menu. Install Python deps once:
 
 ```bash
-# deps per tool
-pip install -r skills/photo-reconciler/requirements.txt
-pip install -r skills/source-finder/requirements.txt
-
-# find a song
-python skills/source-finder/scripts/frames.py clip.mov --crop right
-python skills/source-finder/scripts/extract_audio.py clip.mov -o eq.wav --eq
-python skills/source-finder/scripts/transcribe.py eq.wav --model large-v2
-
-# reconcile photos (always dry-run first!)
-python skills/photo-reconciler/scripts/reconcile.py --work D:/scratch index-icloud
-python skills/photo-reconciler/scripts/reconcile.py --work D:/scratch index-google ./extracted
-python skills/photo-reconciler/scripts/reconcile.py --work D:/scratch compare
-python skills/photo-reconciler/scripts/reconcile.py --work D:/scratch stage --dry-run --list D:/scratch/unique_images.txt
+pip install -r ~/.claude/plugins/cache/sidequests/sidequests/*/skills/source-finder/requirements.txt
+pip install -r ~/.claude/plugins/cache/sidequests/sidequests/*/skills/photo-reconciler/requirements.txt
 ```
 
-See each tool's `SKILL.md` for the full runbook and the hard-won gotchas.
+### Standalone (no Claude)
 
-## Layout
+```bash
+git clone https://github.com/navyas321/sidequests
+cd sidequests
+pip install -r skills/source-finder/requirements.txt
+pip install -r skills/photo-reconciler/requirements.txt
+```
+
+---
+
+## 🎵 source-finder
+
+Give it a clip and it identifies what's playing. Acoustic fingerprinting (Shazam)
+only matches *original studio recordings*, so this climbs a **fallback ladder**
+that also handles live covers and un-catalogued originals — then **verifies**
+before answering.
+
+**With Claude:** drop a file and ask *"what's the song in this clip?"* (it
+auto-triggers), or run `/source-finder <clip>`.
+
+**Standalone:**
+
+```bash
+SF=skills/source-finder/scripts
+
+# 0. read on-screen clues (titles, branding, a chat guessing the song)
+python $SF/frames.py clip.mov --n 6 --crop right     # then look at _frames/*.jpg
+
+# 1. acoustic fingerprint (studio originals)
+python $SF/extract_audio.py clip.mov -o audio.wav --stereo
+python $SF/fingerprint.py audio.wav
+
+# 2. lyrics (works for covers — it's the words, not the recording)
+python $SF/extract_audio.py clip.mov -o eq.wav --eq
+python $SF/transcribe.py eq.wav --model large-v2
+
+# 2b. if lyrics are garbled, isolate vocals first
+python $SF/separate_vocals.py audio.wav -o vox.wav
+python $SF/extract_audio.py vox.wav -o vox16.wav
+python $SF/transcribe.py vox16.wav --model large-v2
+```
+
+Then web-search the most distinctive lyric lines, cross-reference the on-screen
+clues, and verify against the song's known lyrics.
+
+**How the ladder works**
+
+```
+frames / on-screen clues  ─┐
+acoustic fingerprint       ─┼──►  lyric transcription  ──►  web-search + verify  ──►  source
+(Shazam, studio only)      ─┘     (Whisper + EQ/vocal-isolation, handles covers)
+```
+
+> **Worked example.** A 32-second phone clip of a TV showing a Twitch stream.
+> Shazam returned nothing (on the phone *and* via `fingerprint.py`). The video
+> frames showed the streamer's branding and a chat guessing wrong titles.
+> `transcribe.py` on the EQ-boosted vocals recovered enough of the lyrics that a
+> web search nailed it: a streamer's **own original song** — which is exactly
+> why fingerprinting never had a chance, and why lyrics did.
+
+**Output:** `"Title" by Artist`, a link, and one line on *how* it was found
+(fingerprint / lyrics+search / on-screen), plus honest caveats (e.g. "this is a
+live cover; the original is…").
+
+---
+
+## 📷 photo-reconciler
+
+Upload only the Google Photos items that aren't already in iCloud — no
+duplicates. **It uploads to your iCloud account, so it's gated:** always dry-run,
+stage a small canary first, and confirm before the bulk copy.
+
+**With Claude:** `/photo-reconciler path/to/export.zip` and it walks the workflow.
+
+**Standalone:**
+
+```bash
+RC=skills/photo-reconciler/scripts/reconcile.py
+WORK=D:/photoscratch        # a drive with space — NOT the system drive
+
+# 1. hash your iCloud library (resumable; --dehydrate if disk is tight)
+python $RC --work $WORK index-icloud --workers 8
+
+# 2. hash the extracted Google export
+python $RC --work $WORK index-google ./extracted-album
+
+# 3. find what's missing (writes unique_images.txt / unique_videos.txt)
+python $RC --work $WORK compare
+
+# 4. dry-run, then canary, then the rest (gate on confirmation)
+python $RC --work $WORK stage --dry-run --list $WORK/unique_images.txt --list $WORK/unique_videos.txt
+python $RC --work $WORK stage --limit 25 --list $WORK/unique_images.txt   # confirm on icloud.com, then drop --limit
+
+# 5. accounting + integrity report
+python $RC --work $WORK verify --list $WORK/unique_images.txt --list $WORK/unique_videos.txt
+```
+
+**The one trap that matters:** the iCloud library is mostly **HEIC**, and Pillow
+can't read HEIC without `pillow-heif`. Without it, every iCloud photo fails to
+hash, iCloud looks *empty*, and the tool flags everything as new — re-uploading
+your whole album as duplicates. The script registers `pillow-heif` and prints an
+iCloud **error rate**; if it's high, stop and fix deps before trusting the result.
+
+> **Real result.** A 10,531-item album → **6,822 already in iCloud** (correctly
+> skipped) → **2,848 genuinely-missing** items uploaded → **0 duplicates**, all
+> verified on icloud.com.
+
+**Good to know**
+- The modern iCloud-for-Windows (v14+) uploads files copied **directly** into
+  `…\iCloudPhotos\Photos` — there's no "Uploads" subfolder.
+- The filesystem **can't** confirm an upload (with "Download originals" on, an
+  uploaded file still looks local). Ground truth is the iCloud app's counter or
+  icloud.com.
+- Photos whose EXIF survived the export keep their original dates; those that
+  lost it get dated "today" and sit at the top of your library.
+
+---
+
+## Repo layout
+
 ```
 sidequests/
-├─ .claude-plugin/{plugin.json, marketplace.json}
+├─ .claude-plugin/
+│  ├─ plugin.json          # this repo is one plugin…
+│  └─ marketplace.json     # …and a marketplace exposing it
 └─ skills/
-   ├─ photo-reconciler/  SKILL.md + scripts/reconcile.py + requirements.txt
-   └─ source-finder/     SKILL.md + scripts/{extract_audio,fingerprint,transcribe,separate_vocals,frames}.py
+   ├─ source-finder/
+   │  ├─ SKILL.md          # the runbook (the fallback ladder)
+   │  ├─ requirements.txt
+   │  └─ scripts/          # extract_audio, fingerprint, transcribe, separate_vocals, frames
+   └─ photo-reconciler/
+      ├─ SKILL.md          # the runbook (workflow + gotchas + safety)
+      ├─ requirements.txt
+      └─ scripts/reconcile.py
 ```
 
+## Updating
+
+```text
+# after pushing changes (bump "version" in plugin.json for clean tracking)
+/plugin marketplace update sidequests
+/plugin update sidequests@sidequests
+```
+
+## Add your own sidequest
+
+Drop a new folder under `skills/<your-tool>/` with a `SKILL.md` (and a
+`scripts/` dir if it needs code), and it ships with the next plugin update. A
+`SKILL.md` needs only a `description:` in its frontmatter to be discoverable;
+reference bundled scripts with `${CLAUDE_SKILL_DIR}/scripts/...`.
+
 ## License
-MIT — see [LICENSE](LICENSE).
+
+[MIT](LICENSE) © navyas321
