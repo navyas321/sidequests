@@ -1,0 +1,20 @@
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+
+# scratch / outputs from the tools
+_*.wav
+_*.mp3
+_frames/
+_demucs*/
+*.pkl
+unique_images.txt
+unique_videos.txt
+canary_names.txt
+
+# os
+.DS_Store
+Thumbs.db

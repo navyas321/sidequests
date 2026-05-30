@@ -1,0 +1,5 @@
+Pillow
+pillow-heif
+imagehash
+numpy
+tqdm

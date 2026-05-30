@@ -1,0 +1,13 @@
+# core (always needed)
+imageio-ffmpeg
+faster-whisper
+opencv-python-headless
+numpy
+# acoustic fingerprint
+shazamio
+pydub
+# mid-side vocal isolation
+librosa
+soundfile
+# optional: AI vocal separation (heavier, finicky on Windows)
+#   pip install demucs diffq "numpy<2"

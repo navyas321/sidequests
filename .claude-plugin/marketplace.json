@@ -1,0 +1,12 @@
+{
+  "name": "sidequests",
+  "owner": { "name": "navyas321" },
+  "description": "Witty helper tools born as side quests.",
+  "plugins": [
+    {
+      "name": "sidequests",
+      "source": "./",
+      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes) and source-finder (identify a song/source from a clip)."
+    }
+  ]
+}
