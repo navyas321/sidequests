@@ -86,6 +86,11 @@ def norm_video_name(name):
     stem = re.sub(r"_\d+$", "", stem)
     return stem
 
+def load_cache(path, run_first):
+    if not path.exists():
+        sys.exit(f"ERROR: {path.name} not found - run `reconcile.py {run_first}` first.")
+    return pickle.load(open(path, "rb"))
+
 _PC16 = np.array([bin(i).count("1") for i in range(1 << 16)], dtype=np.uint16)
 
 def hamming_min_factory(icloud_hashes):
@@ -216,8 +221,8 @@ def index_google(google_dir, cache):
 
 # ----------------------------------------------------------------- compare
 def compare(icloud_cache, google_cache, out_dir, thresh):
-    ic = pickle.load(open(icloud_cache, "rb"))
-    gg = pickle.load(open(google_cache, "rb"))
+    ic = load_cache(icloud_cache, "index-icloud")
+    gg = load_cache(google_cache, "index-google")
     assert ic.get("complete") and gg.get("complete"), "indexes incomplete"
     min_ham = hamming_min_factory(ic["img_hashes"])
     imgs = [r for r in gg["records"] if r["kind"] == "img"]
@@ -291,8 +296,8 @@ def stage(lists, icloud, dry_run, limit):
 
 # ----------------------------------------------------------------- verify
 def verify(icloud_cache, google_cache, lists, icloud, thresh):
-    ic = pickle.load(open(icloud_cache, "rb"))
-    gg = pickle.load(open(google_cache, "rb"))
+    ic = load_cache(icloud_cache, "index-icloud")
+    gg = load_cache(google_cache, "index-google")
     min_ham = hamming_min_factory(ic["img_hashes"])
     imgs = [r for r in gg["records"] if r["kind"] == "img"]
     vids = [r for r in gg["records"] if r["kind"] == "vid"]
