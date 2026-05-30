@@ -6,7 +6,7 @@
     {
       "name": "sidequests",
       "source": "./",
-      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes) and source-finder (identify a song/source from a clip)."
+      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), and session-context (memory and state continuity across agent sessions)."
     }
   ]
 }
