@@ -17,6 +17,7 @@ or just `python` them directly.
 
 | Tool | What it does | Platform |
 | --- | --- | --- |
+| 🔁 **[session-context](skills/session-context/SKILL.md)** | Keep continuity across sessions — orient a new agent on where the project stands, or checkpoint state so the next session picks up exactly where this one left off | Any OS |
 | 🎵 **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) | Any OS |
 | 📷 **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's missing — no duplicates | Windows + iCloud for Windows |
 
@@ -27,6 +28,7 @@ or just `python` them directly.
 - **Python 3.10+**
 - Each tool has its own `requirements.txt`. `ffmpeg` is bundled via
   `imageio-ffmpeg`, so there's **no system ffmpeg install** to worry about.
+- `session-context` only needs `git` (and optionally `gh` for the PR list).
 - `source-finder` is cross-platform. `photo-reconciler`'s staging/dehydration
   bits are Windows + "iCloud for Windows"; its hashing core is portable.
 
@@ -42,13 +44,15 @@ or just `python` them directly.
 ```
 
 Skills load at **session start**, so open a **new Claude Code session** after
-installing. Then type `/` and you'll see `source-finder` and `photo-reconciler`
-in the menu. Install Python deps once:
+installing. Then type `/` and you'll see all three skills in the menu. Install
+Python deps once:
 
 ```bash
 pip install -r ~/.claude/plugins/cache/sidequests/sidequests/*/skills/source-finder/requirements.txt
 pip install -r ~/.claude/plugins/cache/sidequests/sidequests/*/skills/photo-reconciler/requirements.txt
 ```
+
+(`session-context` has no Python deps — it's pure bash + git.)
 
 ### Standalone (no Claude)
 
@@ -57,6 +61,45 @@ git clone https://github.com/navyas321/sidequests
 cd sidequests
 pip install -r skills/source-finder/requirements.txt
 pip install -r skills/photo-reconciler/requirements.txt
+```
+
+---
+
+## 🔁 session-context
+
+Keep a running project snapshot so any agent (or human) can pick up exactly
+where the last session ended — in any repo, any tech stack.
+
+**With Claude:** just say *"orient yourself"* or *"checkpoint"* and the skill
+fires automatically (it triggers on natural phrases).
+
+| Flow | Trigger phrases | Effect |
+|------|----------------|--------|
+| **orient** | "resume where I left off", "where are we", "orient yourself", "what's next" | Reads `docs/STATUS.md`, `CLAUDE.md`, git log, open PRs — prints current phase + exact next step. **Read-only.** |
+| **checkpoint** | "checkpoint", "save session state", "update STATUS", "wrap up" | Writes `docs/STATUS.md` (phase, what this session did, next step, open decisions). Appends one-liner to `docs/SESSION_LOG.md`. |
+
+**Standalone:**
+
+```bash
+# Snapshot the repo right now (safe, read-only):
+bash skills/session-context/scripts/snapshot.sh
+
+# Pass a different repo path:
+bash skills/session-context/scripts/snapshot.sh /path/to/myrepo
+```
+
+`snapshot.sh` prints branch, recent log, working-tree status, and open PRs
+(degrades gracefully when `gh` is absent). Paste the output into the
+`## Snapshot` section of `docs/STATUS.md`.
+
+**`docs/STATUS.md` shape**
+
+```markdown
+# Project Status
+**Last updated:** YYYY-MM-DD
+## Phase / ## This session did / ## Next step / ## Open decisions / ## Key files
+## Snapshot (auto)
+<snapshot.sh output>
 ```
 
 ---
@@ -83,7 +126,7 @@ python $SF/frames.py clip.mov --n 6 --crop right     # then look at _frames/*.jp
 python $SF/extract_audio.py clip.mov -o audio.wav --stereo
 python $SF/fingerprint.py audio.wav
 
-# 2. lyrics (works for covers — it's the words, not the recording)
+# 2. lyrics (works for covers -- it's the words, not the recording)
 python $SF/extract_audio.py clip.mov -o eq.wav --eq
 python $SF/transcribe.py eq.wav --model large-v2
 
@@ -99,9 +142,9 @@ clues, and verify against the song's known lyrics.
 **How the ladder works**
 
 ```
-frames / on-screen clues  ─┐
-acoustic fingerprint       ─┼──►  lyric transcription  ──►  web-search + verify  ──►  source
-(Shazam, studio only)      ─┘     (Whisper + EQ/vocal-isolation, handles covers)
+frames / on-screen clues  --+
+acoustic fingerprint        +-->  lyric transcription  -->  web-search + verify  -->  source
+(Shazam, studio only)      --+     (Whisper + EQ/vocal-isolation, handles covers)
 ```
 
 > **Worked example.** A 32-second phone clip of a TV showing a Twitch stream.
@@ -113,7 +156,7 @@ acoustic fingerprint       ─┼──►  lyric transcription  ──►  web-
 
 **Output:** `"Title" by Artist`, a link, and one line on *how* it was found
 (fingerprint / lyrics+search / on-screen), plus honest caveats (e.g. "this is a
-live cover; the original is…").
+live cover; the original is...").
 
 ---
 
@@ -129,7 +172,7 @@ stage a small canary first, and confirm before the bulk copy.
 
 ```bash
 RC=skills/photo-reconciler/scripts/reconcile.py
-WORK=D:/photoscratch        # a drive with space — NOT the system drive
+WORK=D:/photoscratch        # a drive with space -- NOT the system drive
 
 # 1. hash your iCloud library (resumable; --dehydrate if disk is tight)
 python $RC --work $WORK index-icloud --workers 8
@@ -154,13 +197,13 @@ hash, iCloud looks *empty*, and the tool flags everything as new — re-uploadin
 your whole album as duplicates. The script registers `pillow-heif` and prints an
 iCloud **error rate**; if it's high, stop and fix deps before trusting the result.
 
-> **Real result.** A 10,531-item album → **6,822 already in iCloud** (correctly
-> skipped) → **2,848 genuinely-missing** items uploaded → **0 duplicates**, all
+> **Real result.** A 10,531-item album — **6,822 already in iCloud** (correctly
+> skipped) — **2,848 genuinely-missing** items uploaded — **0 duplicates**, all
 > verified on icloud.com.
 
 **Good to know**
 - The modern iCloud-for-Windows (v14+) uploads files copied **directly** into
-  `…\iCloudPhotos\Photos` — there's no "Uploads" subfolder.
+  `...\iCloudPhotos\Photos` — there's no "Uploads" subfolder.
 - The filesystem **can't** confirm an upload (with "Download originals" on, an
   uploaded file still looks local). Ground truth is the iCloud app's counter or
   icloud.com.
@@ -173,18 +216,23 @@ iCloud **error rate**; if it's high, stop and fix deps before trusting the resul
 
 ```
 sidequests/
-├─ .claude-plugin/
-│  ├─ plugin.json          # this repo is one plugin…
-│  └─ marketplace.json     # …and a marketplace exposing it
-└─ skills/
-   ├─ source-finder/
-   │  ├─ SKILL.md          # the runbook (the fallback ladder)
-   │  ├─ requirements.txt
-   │  └─ scripts/          # extract_audio, fingerprint, transcribe, separate_vocals, frames
-   └─ photo-reconciler/
-      ├─ SKILL.md          # the runbook (workflow + gotchas + safety)
-      ├─ requirements.txt
-      └─ scripts/reconcile.py
++-- .claude-plugin/
+|   +-- plugin.json          # this repo is one plugin...
+|   +-- marketplace.json     # ...and a marketplace exposing it
++-- skills/
+    +-- session-context/
+    |   +-- SKILL.md          # the runbook (orient + checkpoint flows)
+    |   +-- README.md
+    |   +-- scripts/
+    |       +-- snapshot.sh   # git branch/log/status + gh pr list
+    +-- source-finder/
+    |   +-- SKILL.md          # the runbook (the fallback ladder)
+    |   +-- requirements.txt
+    |   +-- scripts/          # extract_audio, fingerprint, transcribe, separate_vocals, frames
+    +-- photo-reconciler/
+        +-- SKILL.md          # the runbook (workflow + gotchas + safety)
+        +-- requirements.txt
+        +-- scripts/reconcile.py
 ```
 
 ## Updating
