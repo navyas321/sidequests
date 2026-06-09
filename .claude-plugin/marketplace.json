@@ -6,7 +6,7 @@
     {
       "name": "sidequests",
       "source": "./",
-      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), and session-context (memory and state continuity across agent sessions)."
+      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), session-context (memory and state continuity across agent sessions), and steam-shortcut (add a non-Steam game to the Steam library)."
     }
   ]
 }
