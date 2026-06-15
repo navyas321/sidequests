@@ -6,7 +6,7 @@
     {
       "name": "sidequests",
       "source": "./",
-      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), session-context (memory and state continuity across agent sessions), and steam-shortcut (add a non-Steam game to the Steam library)."
+      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), session-context (memory and state continuity across agent sessions), steam-shortcut (add a non-Steam game to the Steam library), and durable-claude-automation (Windows: make scheduled Claude runs and the remote session survive desktop-app restarts/updates/crashes)."
     }
   ]
 }

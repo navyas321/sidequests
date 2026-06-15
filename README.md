@@ -21,6 +21,7 @@ or just `python` them directly.
 | 🎵 **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) | Any OS |
 | 📷 **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's missing — no duplicates | Windows + iCloud for Windows |
 | 🎮 **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses & preserves existing shortcuts, backs up, round-trip-verifies | Windows / Linux / macOS |
+| ⏰ **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote-control session survive desktop-app restarts/updates/crashes — moves the schedule out of the app into Windows Task Scheduler (headless `claude -p`) + an app watchdog | Windows |
 
 ---
 
