@@ -1,10 +1,10 @@
 {
   "name": "sidequests",
-  "description": "A grab-bag of helper tools, born as side quests. Includes photo-reconciler (Google Photos -> iCloud with no duplicates), source-finder (identify the song/source playing in a video or audio clip), session-context (memory, session, state, and context continuity across agent sessions), and steam-shortcut (add a non-Steam game to the Steam library by safely editing shortcuts.vdf).",
-  "version": "0.1.3",
+  "description": "A grab-bag of helper tools, born as side quests. Includes photo-reconciler (Google Photos -> iCloud with no duplicates), source-finder (identify the song/source playing in a video or audio clip), session-context (memory, session, state, and context continuity across agent sessions), steam-shortcut (add a non-Steam game to the Steam library by safely editing shortcuts.vdf), and display-off-shortcut (Start-menu shortcut + conflict-free hotkey to turn the monitor off).",
+  "version": "0.1.4",
   "author": { "name": "navyas321" },
   "homepage": "https://github.com/navyas321/sidequests",
   "repository": "https://github.com/navyas321/sidequests",
   "license": "MIT",
-  "keywords": ["icloud", "google-photos", "dedupe", "perceptual-hash", "song-identification", "shazam", "whisper", "audio", "video", "session", "context", "memory", "continuity", "state", "steam", "shortcuts-vdf", "non-steam-game", "remote-play"]
+  "keywords": ["icloud", "google-photos", "dedupe", "perceptual-hash", "song-identification", "shazam", "whisper", "audio", "video", "session", "context", "memory", "continuity", "state", "steam", "shortcuts-vdf", "non-steam-game", "remote-play", "display", "monitor", "hotkey", "shortcut", "windows"]
 }

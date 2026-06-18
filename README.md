@@ -22,6 +22,7 @@ or just `python` them directly.
 | 📷 **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's missing — no duplicates | Windows + iCloud for Windows |
 | 🎮 **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses & preserves existing shortcuts, backs up, round-trip-verifies | Windows / Linux / macOS |
 | ⏰ **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote-control session survive desktop-app restarts/updates/crashes — moves the schedule out of the app into Windows Task Scheduler (headless `claude -p`) + an app watchdog | Windows |
+| 🖥️ **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off (PC keeps running) — scans existing shortcut hotkeys to avoid collisions, no third-party utility | Windows |
 
 ---
 
@@ -214,6 +215,37 @@ iCloud **error rate**; if it's high, stop and fix deps before trusting the resul
 
 ---
 
+## 🖥️ display-off-shortcut
+
+Turn the **monitor** off on demand while the PC keeps running — downloads, game
+streaming, and background jobs all continue. Wake with any mouse move or
+keypress. Broadcasts the Windows `SC_MONITORPOWER` "monitor off" message, so
+there's no NirCmd or other utility to install.
+
+**With Claude:** *"make a shortcut to turn off my display"* or *"add a hotkey to
+blank the screen"*.
+
+**Standalone:**
+
+```powershell
+# Install the Start-menu shortcut + a conflict-free Ctrl+Alt+<key> hotkey:
+powershell -NoProfile -ExecutionPolicy Bypass -File skills\display-off-shortcut\scripts\install-shortcut.ps1
+
+# Force a specific hotkey, or skip the hotkey entirely:
+... install-shortcut.ps1 -Hotkey "Ctrl+Alt+M"
+... install-shortcut.ps1 -Hotkey none
+```
+
+The installer scans every `.lnk` hotkey in your Start Menu and Desktop (current
++ all users) and picks the first free combo from `Ctrl+Alt+O, M, B, J, L, 0, 9`
+— and never uses `Ctrl+Alt+<Arrow>` (Intel reserves those for screen rotation).
+
+> Display-only: it won't sleep/lock the PC. To also lock, chain
+> `rundll32.exe user32.dll,LockWorkStation`. A few monitors ignore the software
+> power-off (driver/connection dependent) — fall back to `nircmd monitor off`.
+
+---
+
 ## Repo layout
 
 ```
@@ -232,9 +264,12 @@ sidequests/
     |   +-- requirements.txt
     |   +-- scripts/          # extract_audio, fingerprint, transcribe, separate_vocals, frames
     +-- photo-reconciler/
-        +-- SKILL.md          # the runbook (workflow + gotchas + safety)
-        +-- requirements.txt
-        +-- scripts/reconcile.py
+    |   +-- SKILL.md          # the runbook (workflow + gotchas + safety)
+    |   +-- requirements.txt
+    |   +-- scripts/reconcile.py
+    +-- display-off-shortcut/
+        +-- SKILL.md          # the runbook (install + hotkey conflict logic)
+        +-- scripts/          # Turn-Off-Display.ps1 / .vbs + install-shortcut.ps1
 ```
 
 ## Updating
