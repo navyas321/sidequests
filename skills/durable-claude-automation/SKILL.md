@@ -77,9 +77,13 @@ put a "did today's work already happen?" check at the top of the prompt.
 ## Flow B — keep the app alive (remote-session resilience)
 
 ```powershell
-scripts\register-watchdog.ps1            # every 5 min, HIDDEN: relaunch app if no claude process
+scripts\register-watchdog.ps1                       # default: weekdays 09:50 + 16:10, hidden, NO polling
+scripts\register-watchdog.ps1 -AtTimes "08:00","20:00"   # your own discrete times
+scripts\register-watchdog.ps1 -EveryMinutes 10      # legacy polling fallback
 ```
-**Gotcha (important for frequent tasks):** a Task Scheduler action that runs `powershell.exe` directly **flashes a console (conhost) window on every run and steals focus** — `-WindowStyle Hidden` does NOT prevent it. For anything that runs often (a watchdog), launch via **`wscript.exe run-hidden.vbs <script.ps1>`** instead: `wscript` has no console and `Run(...,0,False)` starts PowerShell with a truly hidden window. `register-watchdog.ps1` does this automatically.
+**Prefer discrete times over polling.** The watchdog only needs to *catch* a crash, not poll — discrete weekday triggers avoid periodic CPU/window blips entirely. (`-AtLogOn` would add reboot coverage but needs an elevated prompt to register, so it's omitted by default.)
+
+**Gotcha (the console focus-steal):** a Task Scheduler action that runs `powershell.exe` directly **flashes a console (conhost) window on every run and steals focus** — `-WindowStyle Hidden` does NOT prevent it (the conhost appears before the style applies). Launch via **`wscript.exe run-hidden.vbs <script.ps1>`** instead: `wscript` has no console and `Run(...,0,False)` starts PowerShell with a truly hidden window. Both `register-watchdog.ps1` and (optionally) the headless tasks use this.
 `claude-app-watchdog.ps1` auto-detects the Store AppID
 (`(Get-StartApps | ? Name -eq 'Claude').AppID`) and relaunches via
 `shell:AppsFolder\<AppID>` only when no `claude` process is running. Idempotent;
