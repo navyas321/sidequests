@@ -23,6 +23,8 @@ or just `python` them directly.
 | 🎮 **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses & preserves existing shortcuts, backs up, round-trip-verifies | Windows / Linux / macOS |
 | ⏰ **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote-control session survive desktop-app restarts/updates/crashes — moves the schedule out of the app into Windows Task Scheduler (headless `claude -p`) + an app watchdog | Windows |
 | 🖥️ **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off (PC keeps running) — scans existing shortcut hotkeys to avoid collisions, no third-party utility | Windows |
+| 🏃 **[feature](skills/feature/SKILL.md)** | Drive a feature end-to-end through a full agile-scrum SDLC pipeline: scope & define (plan-mode approval gate), implement, test & verify (adversarial review), and release | Any OS |
+| 🐛 **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop: reproduce, fix at the root cause, add a regression test, verify green, and release | Any OS |
 
 ---
 
@@ -246,6 +248,39 @@ The installer scans every `.lnk` hotkey in your Start Menu and Desktop (current
 
 ---
 
+## 🏃 feature + 🐛 bugfix — agile-scrum SDLC workflow
+
+A pair of skills that run any project through a proper Scrum sprint. Four gated
+stages with a **plan-mode approval gate**, **TodoWrite sprint backlog**,
+**parallel subagents in git worktrees**, and **adversarial review**.
+
+| Command | When to use |
+|---------|-------------|
+| `/feature <description>` | New capability — design + multi-task breakdown + adversarial review |
+| `/bugfix <description / repro>` | "X is broken" — reproduce-first, fix root cause, regression test |
+
+**The four stages:**
+
+```
+[Scope & define] --gate:approved--> [Implement] --gate:builds--> [Test & verify] --gate:green--> [Release]
+```
+
+Gates are hard checkpoints — the agent prints a status block and does not
+advance until the condition is satisfied. See [`skills/feature/README.md`](skills/feature/README.md)
+for the full reference and [`skills/feature/SCRUM.md`](skills/feature/SCRUM.md) for the gate table.
+
+**With Claude:**
+
+```
+/sidequests:feature add pagination to the search results page
+/sidequests:bugfix clicking submit on the login form does nothing
+```
+
+**Requirements:** `git` (required); `gh` optional (PR step degrades gracefully).
+Works in any repo, any language.
+
+---
+
 ## Repo layout
 
 ```
@@ -268,8 +303,14 @@ sidequests/
     |   +-- requirements.txt
     |   +-- scripts/reconcile.py
     +-- display-off-shortcut/
-        +-- SKILL.md          # the runbook (install + hotkey conflict logic)
-        +-- scripts/          # Turn-Off-Display.ps1 / .vbs + install-shortcut.ps1
+    |   +-- SKILL.md          # the runbook (install + hotkey conflict logic)
+    |   +-- scripts/          # Turn-Off-Display.ps1 / .vbs + install-shortcut.ps1
+    +-- feature/
+    |   +-- SKILL.md          # full agile-scrum feature pipeline (4 stages)
+    |   +-- SCRUM.md          # shared process reference (stages, gates, DoD)
+    |   +-- README.md         # overview + usage for feature + bugfix bundle
+    +-- bugfix/
+        +-- SKILL.md          # lightweight scrum bug loop (reproduce-first)
 ```
 
 ## Updating
