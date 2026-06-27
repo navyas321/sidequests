@@ -127,7 +127,7 @@ builds. Then proceed to dedicated verification.
 
 ---
 
-## Stage 3 — Test & verify  (gate: green + adversarial review clean)
+## Stage 3 — Test & verify  (gate: green + regression clean + adversarial review clean)
 
 Goal: prove the feature works and is correct, in rounds, until green.
 
@@ -137,17 +137,33 @@ Goal: prove the feature works and is correct, in rounds, until green.
    say so and fall back to running the app / a smoke test.
 2. **Loop until green.** If a check fails, fix it and re-run the *full* check
    set. Repeat. Never declare done on a red check.
-3. **Adversarial review by an independent subagent.** Spawn a `Task` subagent
+3. **Regression testing.** Verify the change didn't break anything adjacent:
+   - Re-run the full existing check set (build, lint, typecheck, tests) after
+     the feature change is in place.
+   - Add or run a fails-before / passes-after test that is specific to this
+     change (unit test, integration test, or documented manual repro).
+   - **Verify adjacent functionality with the real client path.** For any
+     server, auth, config, or routing change, exercise ALL affected entry
+     points — not just the happy path. Critically: **simulate the actual
+     client path, not loopback only.** Example: a web server reached via a
+     reverse proxy must be tested with the proxied `Host` header and the real
+     client IP, not just `127.0.0.1` — a change can pass local tests yet
+     return "host not allowed" or misbehave for the phone/browser over
+     Tailscale because the forwarded `Host` differs. Test every key endpoint
+     and auth flow from the perspective of the real consumer.
+4. **Adversarial review by an independent subagent.** Spawn a `Task` subagent
    (a reviewer that did NOT write the code) to review the diff for correctness
    bugs, missed edge cases, security issues, and unmet acceptance criteria.
    For broad reviews, run several reviewers in parallel (e.g. correctness,
    security, tests) in one message. If a `code-review` skill/command exists,
    use it. Triage findings: fix real issues (loop back to step 1), record the
    rest.
-4. **Check every acceptance criterion** from Stage 1 explicitly, item by item.
+5. **Check every acceptance criterion** from Stage 1 explicitly, item by item.
 
-**Gate to pass:** all objective checks green AND adversarial review surfaces no
-unaddressed correctness/security issue AND every acceptance criterion is met.
+**Gate to pass:** all objective checks green AND change verified with no
+regressions in adjacent functionality (real client path included) AND
+adversarial review surfaces no unaddressed correctness/security issue AND
+every acceptance criterion is met.
 
 ---
 

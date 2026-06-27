@@ -44,7 +44,7 @@ Too big for one sprint → Epic (decompose first).
 |---|-------|---------|--------|------|
 | 1 | **Scope / Reproduce** | Research + task breakdown + acceptance criteria in plan mode | Reproduce the failure, identify root cause | feature: user approves • bugfix: failing repro + root cause known |
 | 2 | **Implement / Fix** | Task-by-task; parallel worktrees for independent tasks | Smallest correct change at root cause | All tasks complete, project builds |
-| 3 | **Test & verify** | Build/test/lint loop + adversarial review by independent subagent | Regression test (was-red-now-green) + full check set | All checks green, review clean, acceptance criteria met |
+| 3 | **Test & verify** | Build/test/lint loop + **regression testing** (fails-before/passes-after test + adjacent functionality with real client path, not just loopback) + adversarial review by independent subagent | Regression test (was-red-now-green) + adjacent functionality (real client path) + full check set | All checks green, no regressions in adjacent functionality (real client path included), review clean, acceptance criteria met |
 | 4 | **Release** | Commit/PR + changelog + STATUS update + final report | Commit/PR + changelog + STATUS update + final report | Committed (PR if asked), docs updated, report delivered |
 
 **Gates are hard checkpoints** — the agent does not advance until the gate

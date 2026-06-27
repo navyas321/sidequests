@@ -84,7 +84,7 @@ cause is identified. Seed a short backlog with `TodoWrite`.
 
 ---
 
-## Stage 3 — Regression-test & verify  (gate: was-red-now-green + checks clean)
+## Stage 3 — Regression-test & verify  (gate: was-red-now-green + no adjacent regressions + checks clean)
 
 1. **Add a regression test** that fails without the fix and passes with it
    (when the repo has a test harness). If there is genuinely no test
@@ -93,12 +93,23 @@ cause is identified. Seed a short backlog with `TodoWrite`.
    failed in Stage 1.
 3. **Run the full check set** the repo provides (build, tests, lint,
    typecheck). Loop until all green — never declare done on a red check.
-4. **Optional independent review.** For risky changes, spawn a `Task` reviewer
+4. **Verify adjacent functionality with the real client path.** Re-run the
+   full existing checks after the fix is in place, then specifically probe
+   functionality adjacent to the changed code. For server, auth, config, or
+   routing fixes, exercise ALL affected entry points — not just loopback.
+   **Simulate the actual client path:** a web server reached via a reverse
+   proxy must be tested with the proxied `Host` header and the real client IP,
+   not just `127.0.0.1` — a fix can pass local tests yet return "host not
+   allowed" to the phone/browser over Tailscale because the forwarded `Host`
+   differs. Test every key endpoint and auth flow from the real consumer's
+   perspective.
+5. **Optional independent review.** For risky changes, spawn a `Task` reviewer
    subagent to confirm the fix is correct and complete and introduces no
    regression. Use a `code-review` skill/command if one exists.
 
 **Gate to pass:** the previously-failing repro passes, the regression test is
-in place and green, and all objective checks are green.
+in place and green, no regressions in adjacent functionality (real client path
+included), and all objective checks are green.
 
 ---
 

@@ -46,7 +46,7 @@ is satisfied. Print a short status block at every gate.
 |-------|----------|---------|--------------|
 | 1. Scope / Reproduce | Research + task breakdown with acceptance criteria, in **plan mode** | Reproduce the failure, find the **root cause** | feature: user approves the plan • bugfix: failing repro observed + root cause known |
 | 2. Implement / Fix | Build task-by-task; worktrees if parallel | Smallest correct change at the root cause | All tasks complete (or fix done) and project builds |
-| 3. Test & verify | Build/test/lint/typecheck loop + **adversarial review** until green | Add **regression test** + confirm old repro passes + checks green | All objective checks green, review clean, acceptance criteria met |
+| 3. Test & verify | Build/test/lint/typecheck loop + **regression check** (fails-before/passes-after test + adjacent functionality with real client path) + **adversarial review** until green | Add **regression test** + confirm old repro passes + verify adjacent functionality (real client path) + checks green | All objective checks green, no regressions in adjacent functionality (real client path included), review clean, acceptance criteria met |
 | 4. Release | Commit/PR + changelog + STATUS update + report | Commit/PR + changelog + STATUS update + report | Change committed (PR if asked), docs/status updated, report delivered |
 
 ## Why the gates exist
@@ -64,9 +64,10 @@ is satisfied. Print a short status block at every gate.
 ## Definition of Done (feature)
 
 Build passes • unit/integration tests pass • lint + typecheck clean • every
-acceptance criterion met • adversarial review surfaces no unaddressed
-correctness/security issue • docs/changelog updated • change committed and
-STATUS updated.
+acceptance criterion met • fails-before/passes-after regression test in place •
+no regressions in adjacent functionality (real client path verified, not just
+loopback) • adversarial review surfaces no unaddressed correctness/security
+issue • docs/changelog updated • change committed and STATUS updated.
 
 ## Definition of Done (bugfix)
 
