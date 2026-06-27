@@ -66,7 +66,10 @@ After classifying, confirm the type at the top of your first status block.
 2. **Locate the root cause.** Use `Grep`/`Glob`/`Read` to trace from symptom to
    cause. For a large/unknown area, spawn an `Explore` subagent via `Task`.
    State the root cause in one or two sentences before editing.
-3. **Decide the fix approach** and note any risk/blast radius.
+3. **Decide the fix approach** and note any risk/blast radius. For a non-trivial
+   fix, briefly weigh alternatives (point fix vs. addressing the underlying
+   class of bug) and flag any security or data-integrity angle so it's handled
+   in the fix, not after.
 
 **Gate to pass:** the bug is reproduced (failing state observed) and the root
 cause is identified. Seed a short backlog with `TodoWrite`.
@@ -90,7 +93,8 @@ cause is identified. Seed a short backlog with `TodoWrite`.
    (when the repo has a test harness). If there is genuinely no test
    infrastructure, document a manual repro that now passes.
 2. **Confirm the original repro now passes** — re-run the exact thing that
-   failed in Stage 1.
+   failed in Stage 1. This is the acceptance check for a bug: the reported
+   behavior must now be correct, observed on the real client path.
 3. **Run the full check set** the repo provides (build, tests, lint,
    typecheck). Loop until all green — never declare done on a red check.
 4. **Verify adjacent functionality with the real client path.** Re-run the
@@ -103,13 +107,26 @@ cause is identified. Seed a short backlog with `TodoWrite`.
    allowed" to the phone/browser over Tailscale because the forwarded `Host`
    differs. Test every key endpoint and auth flow from the real consumer's
    perspective.
-5. **Optional independent review.** For risky changes, spawn a `Task` reviewer
+5. **Other testing as applicable** — apply only what the fix actually touches,
+   skip the rest explicitly:
+   - **Security:** if the bug or fix touches auth, input handling, secrets, or
+     user data, confirm the fix doesn't open an injection/authz/leak hole and
+     that no secret landed in the diff (run a `security-review` skill if one
+     exists). A security bug needs a security-minded regression test.
+   - **Integration:** if the fix spans a seam between modules/services, test
+     the full flow, not just the patched unit.
+   - **Performance:** if the bug was a slowdown/leak, measure to confirm the
+     fix actually moves the metric.
+   - **Accessibility / cross-device:** for UI fixes, re-check keyboard/focus/
+     labels and verify on the real target surfaces (phone + desktop).
+6. **Optional independent review.** For risky changes, spawn a `Task` reviewer
    subagent to confirm the fix is correct and complete and introduces no
    regression. Use a `code-review` skill/command if one exists.
 
-**Gate to pass:** the previously-failing repro passes, the regression test is
-in place and green, no regressions in adjacent functionality (real client path
-included), and all objective checks are green.
+**Gate to pass:** the previously-failing repro passes (verified on the real
+client path), the regression test is in place and green, no regressions in
+adjacent functionality, applicable extra testing (security/integration/perf/
+a11y/cross-device) done or deemed N/A, and all objective checks are green.
 
 ---
 
@@ -123,13 +140,20 @@ clearly expects it.
 3. Update CHANGELOG / docs if the repo keeps them.
 4. Open a PR (`gh pr create`) when requested, referencing the issue and
    including before/after test evidence.
-5. Update `docs/STATUS.md` if the repo uses it (phase, what was fixed, next
+5. **Deploy and verify the fix live.** If the fix runs somewhere (a restarted
+   service, a served page, a scheduled job), deploy it and confirm the bug is
+   actually gone in the real environment on the real client path — not just in
+   the test harness. If deployment is out of scope, say so.
+6. Update `docs/STATUS.md` if the repo uses it (phase, what was fixed, next
    step).
-6. **Final report:** root cause, the fix, the regression test, verification
-   evidence, and any deferred/flagged issues.
+7. **Final report:** root cause, the fix, the regression test, verification
+   evidence (including the live check), and any deferred/flagged issues.
+8. **Quick retro.** One line: how the bug slipped in and what would catch the
+   class of bug earlier (a test, a check, a guardrail). File follow-ups as
+   separate tasks rather than expanding this fix.
 
-**Gate to pass:** committed (PR opened if requested), docs/status updated,
-final report delivered.
+**Gate to pass:** committed (PR opened if requested), deployed-and-verified
+live where applicable, docs/status updated, final report + retro delivered.
 
 ---
 
@@ -139,7 +163,7 @@ final report delivered.
 ### Stage <n> — <name>: <PASSED|BLOCKED>
 - Done: <key outcome>
 - Repro: <reproduced? root cause?>
-- Checks: <build/test/lint state, regression test added?>
+- Checks: <build/test/lint state, regression test added?, applicable extra testing (security/integration/perf/a11y)>
 - Gate: <required> → <met / blocked because…>
 - Next: <next stage or the blocker>
 ```

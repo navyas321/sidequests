@@ -44,36 +44,52 @@ is satisfied. Print a short status block at every gate.
 
 | Stage | /feature | /bugfix | Gate to pass |
 |-------|----------|---------|--------------|
-| 1. Scope / Reproduce | Research + task breakdown with acceptance criteria, in **plan mode** | Reproduce the failure, find the **root cause** | feature: user approves the plan • bugfix: failing repro observed + root cause known |
+| 1. Scope / Reproduce | Research + **design/approach sketch** + task breakdown with acceptance criteria, in **plan mode** | Reproduce the failure, find the **root cause**, sketch the fix approach | feature: user approves the plan • bugfix: failing repro observed + root cause known |
 | 2. Implement / Fix | Build task-by-task; worktrees if parallel | Smallest correct change at the root cause | All tasks complete (or fix done) and project builds |
-| 3. Test & verify | Build/test/lint/typecheck loop + **regression check** (fails-before/passes-after test + adjacent functionality with real client path) + **adversarial review** until green | Add **regression test** + confirm old repro passes + verify adjacent functionality (real client path) + checks green | All objective checks green, no regressions in adjacent functionality (real client path included), review clean, acceptance criteria met |
-| 4. Release | Commit/PR + changelog + STATUS update + report | Commit/PR + changelog + STATUS update + report | Change committed (PR if asked), docs/status updated, report delivered |
+| 3. Test & verify | Build/lint/typecheck loop + **acceptance/feature test** (criteria met on real client path) + **regression check** (fails-before/passes-after + adjacent functionality, real client path) + **applicable extra testing** (integration/security/perf/a11y/cross-device) + **code/adversarial review** until green | Confirm old repro passes (acceptance) + add **regression test** + verify adjacent functionality (real client path) + **applicable extra testing** + checks green | All objective checks green, acceptance criteria demonstrably met, no regressions in adjacent functionality (real client path), applicable extra testing done or N/A, code/security review clean |
+| 4. Release | Commit/PR + changelog/docs + **deploy-and-verify live** + STATUS update + report + **retro** | Commit/PR + changelog + **deploy-and-verify live** + STATUS update + report + **retro** | Change committed (PR if asked), deployed-and-verified live where applicable, docs/status updated, report + retro delivered |
 
 ## Why the gates exist
 
 - **Scope gate (plan mode).** Stops the agent from coding the wrong thing.
   Plan mode is read-only and routes the plan through Claude Code's approval
-  prompt — that human "yes" is the sprint-planning sign-off.
+  prompt — that human "yes" is the sprint-planning sign-off. The **design/
+  approach sketch** (alternatives, contract shape, blast radius, security
+  angle) is the lightweight design review that keeps you from building the
+  wrong thing well.
 - **Implement gate.** Keeps the tree working; nothing half-built crosses into
   verification.
-- **Verify gate (Definition of Done).** Objective checks plus an *independent*
-  reviewer (not the author) is the quality bar. "Green" is non-negotiable.
+- **Verify gate (Definition of Done).** Proves the feature **does the new
+  thing** (acceptance/feature testing), broke nothing (regression), and holds
+  up on the dimensions it touches (integration/security/perf/a11y/cross-
+  device). Objective checks plus an *independent* reviewer (not the author) and
+  a security pass are the quality bar. "Green" is non-negotiable.
 - **Release gate.** Guarantees the increment is recorded (commit, changelog,
-  STATUS) so it's shippable and the next session can resume.
+  STATUS) **and actually working where it runs** — deploy-and-verify live, not
+  just "tests passed." The closing **retro** captures what to improve and files
+  follow-up debt so the next sprint starts cleaner.
 
 ## Definition of Done (feature)
 
 Build passes • unit/integration tests pass • lint + typecheck clean • every
-acceptance criterion met • fails-before/passes-after regression test in place •
-no regressions in adjacent functionality (real client path verified, not just
-loopback) • adversarial review surfaces no unaddressed correctness/security
-issue • docs/changelog updated • change committed and STATUS updated.
+acceptance criterion demonstrably met (feature/acceptance verified on the real
+client path) • fails-before/passes-after regression test in place • no
+regressions in adjacent functionality (real client path verified, not just
+loopback) • applicable extra testing done or explicitly N/A (integration,
+security, performance, accessibility, cross-device) • security check clean (no
+new vuln, no secret in the diff) • code/adversarial review surfaces no
+unaddressed correctness or security issue • docs/changelog updated • deployed
+and verified live where applicable • change committed, STATUS updated, and a
+quick retro captured.
 
 ## Definition of Done (bugfix)
 
-Originally-failing repro now passes • a regression test fails-before /
-passes-after (or a documented manual repro) • full check set green • root cause
-(not symptom) addressed • change committed and STATUS updated.
+Originally-failing repro now passes (verified on the real client path) • a
+regression test fails-before / passes-after (or a documented manual repro) •
+full check set green • applicable extra testing done or N/A (security,
+integration, performance, accessibility/cross-device) • root cause (not
+symptom) addressed • deployed and verified live where applicable • change
+committed, STATUS updated, and a quick retro captured.
 
 ## Feature vs. bugfix — the difference
 

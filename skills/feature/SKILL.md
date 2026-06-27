@@ -2,8 +2,9 @@
 name: feature
 description: >-
   Drive a feature end-to-end through a full agile-scrum SDLC pipeline: scope &
-  define (with a plan-mode approval gate), implement, test & verify
-  (adversarial review until green), and release (commit/PR + status update).
+  design (with a plan-mode approval gate), implement, test & verify
+  (acceptance + regression + security + code review until green), and release
+  (commit/PR + deploy-and-verify + status + retro).
   Use when the user says "build a feature", "implement <feature>", "/feature",
   "run the scrum workflow", "do this as a full SDLC", "ship this feature
   properly", or "scope, build, test and release X". Project-agnostic; works in
@@ -91,9 +92,19 @@ research + planning**; do not edit code yet.
    - **acceptance criteria** (how we will know it is done — observable,
      testable),
    - dependencies / parallelizable flag.
-4. **Define the Definition of Done** for the whole feature: build passes, tests
-   pass, lint/typecheck clean, acceptance criteria met, docs/changelog updated.
-5. **Present the plan and STOP at the gate.** Surface the plan for approval
+4. **Sketch the design / approach** before committing to a backlog. For any
+   non-trivial change, briefly state the design: the approach chosen, the main
+   alternatives considered and why they were rejected, the data/contract/API
+   shape, and the blast radius (what else this touches). Note security and
+   privacy implications here so they're designed in, not bolted on. Keep it
+   proportional — a paragraph for a small feature, a short section for a large
+   one. This is the lightweight design review that prevents building the wrong
+   thing well.
+5. **Define the Definition of Done** for the whole feature: build passes, tests
+   pass, lint/typecheck clean, acceptance criteria met (feature/acceptance
+   tests green), security check clean, docs/changelog updated, deployed and
+   verified in the target environment.
+6. **Present the plan and STOP at the gate.** Surface the plan for approval
    (plan mode's approval prompt, or an explicit "Approve this plan? (y/n)").
    Do not proceed until the user approves. Incorporate feedback and re-present
    if they ask for changes.
@@ -127,9 +138,12 @@ builds. Then proceed to dedicated verification.
 
 ---
 
-## Stage 3 — Test & verify  (gate: green + regression clean + adversarial review clean)
+## Stage 3 — Test & verify  (gate: acceptance + regression green + review + security clean)
 
-Goal: prove the feature works and is correct, in rounds, until green.
+Goal: prove the feature **does the new thing it was asked to do**, is correct,
+and broke nothing — in rounds, until green. Testing here is broader than
+regression: it covers the new behavior plus whatever testing dimensions the
+change actually touches.
 
 1. **Run the objective checks** the repo provides — discover and run them:
    build, unit/integration tests, lint, typecheck. Detect the commands from
@@ -137,11 +151,18 @@ Goal: prove the feature works and is correct, in rounds, until green.
    say so and fall back to running the app / a smoke test.
 2. **Loop until green.** If a check fails, fix it and re-run the *full* check
    set. Repeat. Never declare done on a red check.
-3. **Regression testing.** Verify the change didn't break anything adjacent:
+3. **Feature / acceptance testing (the new behavior).** Prove the feature
+   meets the acceptance criteria from Stage 1 — go through them item by item
+   and demonstrate each is satisfied (a test, a command, or an observed run).
+   Exercise the new behavior on the **real client path**, not just a unit
+   harness: drive it the way a user/consumer actually will. This is the
+   primary purpose of the stage — a green regression suite does not prove the
+   feature works.
+4. **Regression testing (nothing adjacent broke).**
    - Re-run the full existing check set (build, lint, typecheck, tests) after
      the feature change is in place.
-   - Add or run a fails-before / passes-after test that is specific to this
-     change (unit test, integration test, or documented manual repro).
+   - Add a fails-before / passes-after test specific to this change (unit,
+     integration, or documented manual repro).
    - **Verify adjacent functionality with the real client path.** For any
      server, auth, config, or routing change, exercise ALL affected entry
      points — not just the happy path. Critically: **simulate the actual
@@ -151,43 +172,73 @@ Goal: prove the feature works and is correct, in rounds, until green.
      return "host not allowed" or misbehave for the phone/browser over
      Tailscale because the forwarded `Host` differs. Test every key endpoint
      and auth flow from the perspective of the real consumer.
-4. **Adversarial review by an independent subagent.** Spawn a `Task` subagent
-   (a reviewer that did NOT write the code) to review the diff for correctness
-   bugs, missed edge cases, security issues, and unmet acceptance criteria.
-   For broad reviews, run several reviewers in parallel (e.g. correctness,
-   security, tests) in one message. If a `code-review` skill/command exists,
-   use it. Triage findings: fix real issues (loop back to step 1), record the
-   rest.
-5. **Check every acceptance criterion** from Stage 1 explicitly, item by item.
+5. **Other testing as applicable** — apply only the dimensions the change
+   actually touches; skip the rest explicitly:
+   - **Integration / end-to-end:** if the feature spans modules, services, or
+     a DB/queue/external API, test the seams and the full flow, not just units.
+   - **Security:** if it touches auth, input handling, secrets, file/network
+     access, or user-supplied data, check for the relevant class of issue
+     (injection, XSS, authz bypass, path traversal, leaked secrets/PII,
+     unsafe deserialization). Run a `security-review` skill/command if one
+     exists. Confirm no secret or credential landed in the diff.
+   - **Performance:** if it's on a hot path or handles large inputs, sanity-
+     check latency / memory / query count against expectations; watch for N+1s
+     and accidental O(n²).
+   - **Accessibility:** for UI changes, check keyboard navigation, focus
+     states, labels/alt text, semantic markup, and contrast.
+   - **Cross-device / cross-environment:** for UI or client-facing changes,
+     verify on the real target surfaces (e.g. phone + desktop, the actual
+     browser over Tailscale), not just the dev machine.
+6. **Code review + adversarial review by an independent subagent.** Spawn a
+   `Task` subagent (a reviewer that did NOT write the code) to review the diff
+   for correctness bugs, missed edge cases, security issues, style/maintain-
+   ability, and unmet acceptance criteria. For broad reviews, run several
+   reviewers in parallel (e.g. correctness, security, tests) in one message.
+   Use a `code-review` skill/command if one exists. Triage findings: fix real
+   issues (loop back to step 1), record the rest.
 
-**Gate to pass:** all objective checks green AND change verified with no
-regressions in adjacent functionality (real client path included) AND
-adversarial review surfaces no unaddressed correctness/security issue AND
-every acceptance criterion is met.
+**Gate to pass:** all objective checks green AND every acceptance criterion is
+demonstrably met (feature/acceptance verified on the real client path) AND no
+regressions in adjacent functionality (real client path included) AND the
+applicable extra testing (integration/security/perf/a11y/cross-device) is done
+or explicitly deemed N/A AND code/adversarial review surfaces no unaddressed
+correctness or security issue.
 
 ---
 
-## Stage 4 — Release  (gate: change is finalized & recorded)
+## Stage 4 — Release  (gate: change is finalized, deployed-and-verified & recorded)
 
-Goal: finalize and hand off. **Do destructive/remote git actions only when the
-user has asked to commit/push or clearly expects it.**
+Goal: finalize, ship, and hand off. **Do destructive/remote git actions only
+when the user has asked to commit/push or clearly expects it.**
 
 1. **Branch hygiene.** If on the default branch (`main`/`master`), create a
    feature branch before committing.
 2. **Commit** the change with a clear message describing the feature and why.
    Group into logical commits if large.
 3. **Changelog / docs.** Update CHANGELOG / README / relevant docs if the repo
-   keeps them.
+   keeps them. Document any new config, flags, env vars, or migration steps a
+   consumer needs.
 4. **Open a PR** (`gh pr create`) when the user wants one, with a summary,
    the acceptance criteria as a checklist, and test evidence.
-5. **Status update.** If the repo uses `docs/STATUS.md` (session-context
+5. **Deploy and verify in the target environment.** If the change is deployed
+   (a running service restarted, a page served, a job scheduled), actually
+   deploy it and then **verify it live** — smoke-test the deployed artifact on
+   the real client path, not just the local build. A change that passed tests
+   but was never observed working where it runs is not done. If deployment is
+   out of scope (library, PR for someone else to merge), say so explicitly.
+6. **Status update.** If the repo uses `docs/STATUS.md` (session-context
    convention), update it: phase, what this sprint did, exact next step. This
    keeps a fresh session able to resume.
-6. **Final report** to the user: what shipped, how it was verified, branch/PR
-   link, and any follow-ups or deferred review findings.
+7. **Final report** to the user: what shipped, how it was verified (acceptance
+   + regression + applicable extra testing + live check), branch/PR link, and
+   any follow-ups or deferred review findings.
+8. **Quick retro.** Close with one or two lines: what went well, what to do
+   differently next time, and any debt or follow-up work to file (spawn a
+   separate task for anything out of scope rather than expanding this one).
 
-**Gate to pass:** committed (and PR opened if requested), docs/changelog and
-status updated, final report delivered.
+**Gate to pass:** committed (and PR opened if requested), deployed-and-verified
+live where applicable, docs/changelog and status updated, final report + retro
+delivered.
 
 ---
 
@@ -197,7 +248,8 @@ status updated, final report delivered.
 ### Stage <n> — <name>: <PASSED|BLOCKED>
 - Done: <key outcomes>
 - Backlog: <x/y tasks complete>
-- Checks: <build/test/lint state>
+- Checks: <build/test/lint state; acceptance + regression + applicable extra testing (integration/security/perf/a11y/cross-device)>
+- Review: <code/adversarial review state; security check>
 - Gate: <what was required> → <met / blocked because…>
 - Next: <next stage or the blocker to resolve>
 ```
