@@ -1,10 +1,10 @@
 {
   "name": "sidequests",
-  "description": "A grab-bag of helper tools, born as side quests. Includes photo-reconciler (Google Photos -> iCloud with no duplicates), source-finder (identify the song/source playing in a video or audio clip), session-context (memory, session, state, and context continuity across agent sessions), steam-shortcut (add a non-Steam game to the Steam library by safely editing shortcuts.vdf), display-off-shortcut (Start-menu shortcut + conflict-free hotkey to turn the monitor off), feature (full agile-scrum SDLC pipeline: scope→implement→test→release with plan-mode gate and adversarial review), and bugfix (lightweight scrum bug loop: reproduce-first, fix root cause, regression test, release).",
-  "version": "0.1.5",
+  "description": "A grab-bag of helper tools, born as side quests. Includes photo-reconciler (Google Photos -> iCloud with no duplicates), source-finder (identify the song/source playing in a video or audio clip), session-context (memory, session, state, and context continuity across agent sessions), steam-shortcut (add a non-Steam game to the Steam library by safely editing shortcuts.vdf), display-off-shortcut (Start-menu shortcut + conflict-free hotkey to turn the monitor off), feature (full agile-scrum SDLC pipeline: scope->implement->test->release with plan-mode gate and adversarial review), bugfix (lightweight scrum bug loop: reproduce-first, fix root cause, regression test, release), and usage-limit-guard (survive Claude usage limits + resume a long autonomous loop from durable repo state).",
+  "version": "0.1.6",
   "author": { "name": "navyas321" },
   "homepage": "https://github.com/navyas321/sidequests",
   "repository": "https://github.com/navyas321/sidequests",
   "license": "MIT",
-  "keywords": ["icloud", "google-photos", "dedupe", "perceptual-hash", "song-identification", "shazam", "whisper", "audio", "video", "session", "context", "memory", "continuity", "state", "steam", "shortcuts-vdf", "non-steam-game", "remote-play", "display", "monitor", "hotkey", "shortcut", "windows", "agile", "scrum", "sdlc", "feature", "bugfix", "tdd", "sprint", "worktree", "adversarial-review"]
+  "keywords": ["icloud", "google-photos", "dedupe", "perceptual-hash", "song-identification", "shazam", "whisper", "audio", "video", "session", "context", "memory", "continuity", "state", "steam", "shortcuts-vdf", "non-steam-game", "remote-play", "display", "monitor", "hotkey", "shortcut", "windows", "agile", "scrum", "sdlc", "feature", "bugfix", "tdd", "sprint", "worktree", "adversarial-review", "usage-limits", "rate-limit", "rate-limit-resume", "checkpoint", "autonomous-loop", "headless", "token-burn"]
 }

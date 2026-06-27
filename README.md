@@ -25,6 +25,7 @@ or just `python` them directly.
 | 🖥️ **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off (PC keeps running) — scans existing shortcut hotkeys to avoid collisions, no third-party utility | Windows |
 | 🏃 **[feature](skills/feature/SKILL.md)** | Drive a feature end-to-end through a full agile-scrum SDLC pipeline: scope & define (plan-mode approval gate), implement, test & verify (adversarial review), and release | Any OS |
 | 🐛 **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop: reproduce, fix at the root cause, add a regression test, verify green, and release | Any OS |
+| ⏳ **[usage-limit-guard](skills/usage-limit-guard/SKILL.md)** | Keep a repo-backed autonomous loop making progress across Claude's 5h/weekly usage limits and outages — read local token-burn, detect the limit headlessly, and resume a fresh session from durable repo state (commit-per-item + `CHECKPOINT.json` + journal) instead of `--resume` | Any OS (`git` only) |
 
 ---
 
@@ -49,7 +50,7 @@ or just `python` them directly.
 ```
 
 Skills load at **session start**, so open a **new Claude Code session** after
-installing. Then type `/` and you'll see all three skills in the menu. Install
+installing. Then type `/` and you'll see all the skills in the menu. Install
 Python deps once:
 
 ```bash
@@ -278,6 +279,45 @@ for the full reference and [`skills/feature/SCRUM.md`](skills/feature/SCRUM.md) 
 
 **Requirements:** `git` (required); `gh` optional (PR step degrades gracefully).
 Works in any repo, any language.
+## ⏳ usage-limit-guard
+
+Make any **repo-backed autonomous loop** (a backlog watcher, a `/loop`, a nightly
+headless agent) survive Claude's usage limits, outages, and session death — and
+resume cleanly. The core idea: **the repo is the resume state, not the session.**
+Commit per work-item, keep a tiny checkpoint + a dated journal, and a brand-new
+session resumes by *reading* that state. One kill loses at most the item in flight.
+
+**With Claude:** say *"make this survive usage limits"*, *"resume after the limit
+resets"*, or *"how much usage am I burning"* and the skill fires.
+
+**Standalone:**
+
+```bash
+ULG=skills/usage-limit-guard/scripts
+
+# how much have I burned locally? (the ONLY programmatic usage signal)
+python $ULG/token_burn.py
+
+# in a headless loop: run one bounded item, then classify the outcome
+claude -p "<do the next item>" --output-format json --max-turns 30 > run.json; rc=$?
+python $ULG/detect_limit.py run.json $rc
+#   OK            -> commit the item, advance CHECKPOINT.json, continue
+#   LIMIT <time>  -> commit, store the reset time, EXIT (next scheduled run resumes)
+#   ERROR <cat>   -> log + back off per category
+```
+
+**Two truths it bakes in**
+- The only programmatic usage signal is **local transcript token-burn** (sum
+  `message.usage` across `~/.claude/projects/**/*.jsonl`). The real claude.ai **5h /
+  weekly limit %** is *not* API-exposed — the skill reports the burn proxy and says so.
+- On **Windows, `--resume` / `-c` are buggy** (freeze, lost conversations, crash on
+  killed sessions). Resume is by reading repo state — never the session.
+
+**Durable-resume artifacts** (committed): commit-per-item + `CHECKPOINT.json`
+(`lastRun` / `lastItem` / `nextItem` / `doneThisCycle` / `limitResetsAt`) + a dated
+journal. A fresh `claude -p` reads them + `git log` + memory and continues. See the
+[`SKILL.md`](skills/usage-limit-guard/SKILL.md) for the full procedure and a
+new-repo setup checklist.
 
 ---
 
@@ -311,6 +351,13 @@ sidequests/
     |   +-- README.md         # overview + usage for feature + bugfix bundle
     +-- bugfix/
         +-- SKILL.md          # lightweight scrum bug loop (reproduce-first)
+    +-- steam-shortcut/
+    |   +-- SKILL.md          # the runbook (safe shortcuts.vdf editing)
+    |   +-- scripts/
+    +-- usage-limit-guard/
+        +-- SKILL.md          # the runbook (usage / guard / checkpoint / resume flows)
+        +-- README.md
+        +-- scripts/          # token_burn.py, detect_limit.py (stdlib only)
 ```
 
 ## Updating

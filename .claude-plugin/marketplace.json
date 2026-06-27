@@ -6,7 +6,7 @@
     {
       "name": "sidequests",
       "source": "./",
-      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), session-context (memory and state continuity across agent sessions), steam-shortcut (add a non-Steam game to the Steam library), durable-claude-automation (Windows: make scheduled Claude runs and the remote session survive desktop-app restarts/updates/crashes), feature (full agile-scrum SDLC pipeline for building features), and bugfix (lightweight scrum loop for tracking and fixing bugs)."
+      "description": "Helper tools: photo-reconciler (Google Photos -> iCloud, no dupes), source-finder (identify a song/source from a clip), session-context (memory and state continuity across agent sessions), steam-shortcut (add a non-Steam game to the Steam library), durable-claude-automation (Windows: make scheduled Claude runs and the remote session survive desktop-app restarts/updates/crashes), feature (full agile-scrum SDLC pipeline for building features), bugfix (lightweight scrum loop for tracking and fixing bugs), and usage-limit-guard (survive Claude usage limits + resume an autonomous loop from durable repo state)."
     }
   ]
 }
