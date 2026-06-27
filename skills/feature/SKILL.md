@@ -23,6 +23,32 @@ This is the heavyweight variant. For a small defect, use `/bugfix` instead.
 The shared process reference is `${CLAUDE_SKILL_DIR}/SCRUM.md` — read it if a
 stage gate is ambiguous.
 
+---
+
+## Step 0 — Classify the work item, then apply only the matching stages
+
+Before entering Stage 1, identify the type of work item and select the
+appropriate pipeline. Do not run the full feature pipeline for a bug or spike —
+and do not skip stages for an epic or story that genuinely needs them.
+
+| Work-item type | Definition | Pipeline to run |
+|----------------|------------|-----------------|
+| **Epic** | Large initiative (weeks–months) that must be decomposed into multiple stories before any coding starts. Crosses sprint boundaries. | **Scope decomposition gate → per-story `/feature` runs → integration → Release.** Scope the epic first (Stage 1 read-only), break it into stories, run each story through its own `/feature` pipeline, then integrate and release the whole. |
+| **Story / Feature** | A user-facing increment deliverable in one sprint. Adds new value observable by a user. | **Full four-stage pipeline** (this skill): Scope gate → Implement → Test & verify → Release. |
+| **Task** | A small, internal unit of work (under ~half a sprint). No new user-facing surface, but supports a story or keeps the system healthy. Chores ("upgrade library X", "refactor Y") are tasks. | **Condensed pipeline:** light Scope (no heavy plan-mode gate — brief intent statement suffices), Implement → Test → Release. Skip the formal plan-mode approval; proceed after a one-paragraph intent check. |
+| **Bug** | A defect: the system behaves contrary to its specification or user expectation. | **Use `/bugfix` instead** (Reproduce → Fix → Regression-test → Release). Do not run this skill for bugs. |
+| **Spike** | Time-boxed research or prototyping to reduce uncertainty. Produces a recommendation or decision, not shippable code. | **Scope/research only** (Stage 1 extended): timebox the investigation, produce a written recommendation, and stop. Do not implement or release. |
+
+**Decision rule:** if unsure between Story and Task, ask: does it add
+user-observable value and require acceptance criteria? Yes → Story (full
+pipeline). No → Task (condensed pipeline). If it might be an Epic, ask: can
+it be done in one sprint? No → decompose into stories first.
+
+After classifying, state the type at the top of your first status block and
+confirm with the user if uncertain. Then proceed with the matching pipeline.
+
+---
+
 ## Operating principles
 
 - **One source of truth for tasks.** Maintain the sprint backlog with the

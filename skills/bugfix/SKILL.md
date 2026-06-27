@@ -21,6 +21,28 @@ the same task tracker, just with less ceremony. The bug is: **$ARGUMENTS**
 For a substantial new capability, use `/feature` instead. The shared process
 reference is `${CLAUDE_SKILL_DIR}/../feature/SCRUM.md`.
 
+---
+
+## Step 0 — Classify the work item, then apply only the matching stages
+
+Before entering Stage 1, confirm this is actually a bug, not a task, spike, or
+feature. Misclassification wastes pipeline overhead in both directions.
+
+| Work-item type | Definition | What to do |
+|----------------|------------|------------|
+| **Bug** | The system behaves contrary to its specification or user expectation. Something that *was* working (or should work) is broken. | **This skill — full Reproduce → Fix → Regression-test → Release loop.** |
+| **Task / Chore** | Intentional internal change (refactor, upgrade, cleanup). Nothing is "broken" — this is deliberate improvement. | Use `/feature` condensed pipeline (light scope, implement, test, release). Not this skill. |
+| **Story / Feature** | New user-facing capability. Nothing exists to break; this is net-new work. | Use `/feature` full pipeline. |
+| **Spike** | Uncertainty about root cause requires research before a fix approach is known. | Run Stage 1 (Reproduce & diagnose) extended: investigate and produce a findings note with a recommended fix approach, then decide whether to loop back as a bug or escalate as a feature. |
+
+**Decision rule:** does a user or test currently experience an outcome that
+contradicts documented or reasonable expected behavior? Yes → Bug (this skill).
+No → re-classify above.
+
+After classifying, confirm the type at the top of your first status block.
+
+---
+
 ## Operating principles
 
 - Track the few steps with `TodoWrite` so the loop is visible.

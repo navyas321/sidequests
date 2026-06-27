@@ -7,6 +7,36 @@ variants differ. Read it when a stage gate is ambiguous.
 The model is a single-sprint Scrum loop run by one agent (plus subagents):
 backlog → sprint work → verify (Definition of Done) → increment shipped.
 
+## Step 0 — Work-item classification
+
+Before selecting a pipeline, classify the work item. Each type maps to a
+specific set of stages. Apply only the matching stages — do not run the full
+feature pipeline for a spike, and do not skip stages for an epic or story.
+
+| Type | Definition | SDLC stages to run | Notes |
+|------|------------|-------------------|-------|
+| **Epic** | Large initiative spanning multiple sprints; must be decomposed before coding. | Scope decomposition → per-story `/feature` runs → integrate → Release | Scope the epic (Stage 1 read-only), break into stories, run each story through its own pipeline, integrate, then release the whole increment. |
+| **Story / Feature** | User-facing increment deliverable in one sprint. Adds observable value. | Full pipeline: Scope gate → Implement → Test & verify → Release | The default `/feature` pipeline. Requires plan-mode approval gate and adversarial review. |
+| **Task / Chore** | Small internal unit: refactor, upgrade, cleanup, config change. No new user-facing surface. | Condensed: light Scope (intent statement, no plan-mode gate) → Implement → Test → Release | Skip the heavy plan-mode approval; a one-paragraph intent check suffices. Still requires a green check set before release. |
+| **Bug** | System behaves contrary to specification or user expectation; something is broken. | Use `/bugfix`: Reproduce → Fix → Regression-test → Release | Never run `/feature` for bugs. Reproduce-first is the defining rule. |
+| **Spike** | Time-boxed research or prototype to reduce uncertainty. Produces a recommendation, not shippable code. | Scope / research only (Stage 1 extended) — stop; output a written recommendation | Do not implement or release. Timeboxed. Spike output is an artifact (doc or decision), not a diff. |
+| **Sub-task** | Atomic unit within a story or task, owned by one person for less than a day. | Implement → Test (no Scope gate, no Release stage — the parent story releases) | Used internally during Stage 2 of a story or task; not invoked as a top-level skill. |
+
+**Decision rules**
+
+- Does it add user-observable value and require acceptance criteria? → **Story**
+  (full pipeline).
+- Is it internal work, no new surface, nothing is broken? → **Task** (condensed
+  pipeline).
+- Is something currently broken that should work? → **Bug** (`/bugfix`).
+- Is the approach unknown and research must come first? → **Spike** (Stage 1
+  only, timeboxed).
+- Is it too large to finish in one sprint? → **Epic** (decompose into stories
+  first).
+
+State the classified type in the first status block and confirm with the user
+if classification is uncertain.
+
 ## The stages and their gates
 
 A "gate" is a hard checkpoint. Do not advance to the next stage until the gate

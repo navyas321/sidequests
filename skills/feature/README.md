@@ -15,6 +15,25 @@ it when a gate is ambiguous.
 
 ---
 
+## Step 0 — Work-item classification
+
+Before running any pipeline, classify the work item. Each type maps to a
+specific set of stages.
+
+| Type | Definition | Pipeline |
+|------|------------|----------|
+| **Epic** | Multi-sprint initiative; must be decomposed into stories first | Scope decomposition → per-story `/feature` runs → integrate → Release |
+| **Story / Feature** | User-facing increment in one sprint | Full `/feature` pipeline (all four stages) |
+| **Task / Chore** | Internal work — refactor, upgrade, cleanup; no new user surface | Condensed: light Scope (no plan-mode gate) → Implement → Test → Release |
+| **Bug** | Something broken that should work | `/bugfix`: Reproduce → Fix → Regression-test → Release |
+| **Spike** | Time-boxed research; output is a recommendation, not code | Stage 1 only (timeboxed) — stop after producing a recommendation |
+
+**Quick decision rules:** user-observable value + acceptance criteria → Story.
+Internal, nothing broken → Task. Broken behavior → Bug. Unknown approach → Spike.
+Too big for one sprint → Epic (decompose first).
+
+---
+
 ## The four stages
 
 ```
