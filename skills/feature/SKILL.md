@@ -260,3 +260,55 @@ delivered.
   (PR step degrades to "commit only"). Detects tooling from the repo.
 - If the user wants only part of the pipeline (e.g. "just scope it"), run the
   requested stages and stop at that gate.
+
+## Central scrum board (optional, env-configured)
+
+If the environment variable `SCRUM_CENTRAL_BOARD` is set, write all run files
+to that directory instead of cwd-relative `data/workflow/`. This lets a hub
+(e.g. a personal dashboard) aggregate runs from every project on the machine
+into one visible board.
+
+**How to use:**
+
+1. Set `SCRUM_CENTRAL_BOARD` to an absolute path of a directory that your
+   dashboard's server globs for `*.json` run files, for example:
+   `SCRUM_CENTRAL_BOARD=/path/to/my-hub/data/workflow`
+2. Optionally set `SCRUM_CENTRAL_BACKLOG` to an absolute path of a
+   `backlog.json` file the hub reads, so backlog items from any project appear
+   on the hub's Backlog board.
+3. If either variable is unset, fall back to the cwd-relative paths
+   (`data/workflow/<RUNKEY>.json` and `data/backlog.json`).
+
+**Run-file schema** (write exactly this shape):
+
+```json
+{
+  "id": "<RUNKEY>",
+  "project": "<the actual repo/project you are working in — not the hub repo>",
+  "type": "feature",
+  "session": "<short-session-slug>",
+  "title": "<one-line feature title>",
+  "status": "active",
+  "createdAt": "<ISO timestamp>",
+  "updatedAt": "<ISO timestamp>",
+  "stages": [
+    {"key": "scope",     "label": "Scope & define",  "status": "active", "tasks": [...]},
+    {"key": "implement", "label": "Implement",        "status": "todo",   "tasks": []},
+    {"key": "test",      "label": "Test & verify",    "status": "todo",   "tasks": []},
+    {"key": "release",   "label": "Release",          "status": "todo",   "tasks": []}
+  ]
+}
+```
+
+- **Write the file as soon as Stage 1 begins** so the board shows work in
+  progress immediately. Update `status` and `updatedAt` at each stage gate.
+  Set top-level `status` to `done` on release.
+- **Use atomic writes:** write to `<path>.tmp` then rename, so the board never
+  reads a half-written file.
+- The `project` field must name the repo you were working in (not the hub), so
+  runs from different projects are distinguishable on the board.
+
+**RUNKEY format:** `<PREFIX>-<TYPE>-<NN>` where PREFIX is a short all-caps
+project tag, TYPE is `FE`/`BG`/`TK`/`EP`/`ST`/`SP` matching the work-item
+type, and NN is a zero-padded incrementing number unique within the board
+directory.

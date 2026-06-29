@@ -173,3 +173,51 @@ live where applicable, docs/status updated, final report + retro delivered.
 - Self-contained and project-agnostic: needs only `git`; `gh` optional.
 - Reproduce-first is the rule that distinguishes a real fix from a guess —
   never skip Stage 1's observed failure.
+
+## Central scrum board (optional, env-configured)
+
+If the environment variable `SCRUM_CENTRAL_BOARD` is set, write all run files
+to that directory instead of cwd-relative `data/workflow/`. This lets a hub
+(e.g. a personal dashboard) aggregate runs from every project on the machine
+into one visible board.
+
+**How to use:**
+
+1. Set `SCRUM_CENTRAL_BOARD` to an absolute path of a directory that your
+   dashboard's server globs for `*.json` run files, for example:
+   `SCRUM_CENTRAL_BOARD=/path/to/my-hub/data/workflow`
+2. Optionally set `SCRUM_CENTRAL_BACKLOG` to an absolute path of a
+   `backlog.json` file the hub reads, so backlog items from any project appear
+   on the hub's Backlog board.
+3. If either variable is unset, fall back to the cwd-relative paths
+   (`data/workflow/<RUNKEY>.json` and `data/backlog.json`).
+
+**Run-file schema** (write exactly this shape):
+
+```json
+{
+  "id": "<RUNKEY>",
+  "project": "<the actual repo/project you are working in — not the hub repo>",
+  "type": "bug",
+  "session": "<short-session-slug>",
+  "title": "<one-line bug title>",
+  "updatedAt": "<ISO timestamp>",
+  "stages": [
+    {"key": "reproduce", "label": "Reproduce & diagnose", "status": "active", "tasks": [...]},
+    {"key": "fix",       "label": "Fix",                  "status": "todo",   "tasks": []},
+    {"key": "test",      "label": "Regression-test",      "status": "todo",   "tasks": []},
+    {"key": "release",   "label": "Release",              "status": "todo",   "tasks": []}
+  ]
+}
+```
+
+- **Write the file as soon as Stage 1 begins** so the board shows the run in
+  progress immediately. Update `status` and `updatedAt` at each stage gate.
+- **Use atomic writes:** write to `<path>.tmp` then rename, so the board never
+  reads a half-written file.
+- The `project` field must name the repo you were working in (not the hub), so
+  runs from different projects are distinguishable on the board.
+
+**RUNKEY format:** `<PREFIX>-BG-<NN>` where PREFIX is a short all-caps project
+tag and NN is a zero-padded incrementing number unique within the board
+directory.
