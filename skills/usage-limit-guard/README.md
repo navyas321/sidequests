@@ -40,6 +40,7 @@ that must survive limits and restarts.
 ```
 usage-limit-guard/
 ├── SKILL.md                  # the procedure (usage / guard / checkpoint / resume flows)
+├── TOKEN-MANAGEMENT.md       # avoid the limit: opusplan, model/effort tiering, /compact, cache discipline
 ├── README.md                 # this file
 └── scripts/
     ├── token_burn.py         # local token-burn report (today / 5h / 7d) — the only programmatic usage signal

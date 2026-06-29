@@ -31,6 +31,11 @@ work-item; keep a small machine-readable checkpoint + a dated journal. A brand-n
 This generalizes the life-in-tabs backlog-watcher pattern into a reusable recipe
 for any repo and any tech stack. `git` is the only hard requirement.
 
+> **Don't just survive the limit — avoid it.** See [`TOKEN-MANAGEMENT.md`](./TOKEN-MANAGEMENT.md)
+> for token-saving rules (`opusplan`, model/effort tiering, subagent tiering,
+> `/compact` at task boundaries, cache discipline) that stretch a session so you
+> hit the cap far less often.
+
 ---
 
 ## Background — how the limits actually work (keep current)
