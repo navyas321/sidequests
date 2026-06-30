@@ -211,6 +211,15 @@ correctness or security issue.
 Goal: finalize, ship, and hand off. **Do destructive/remote git actions only
 when the user has asked to commit/push or clearly expects it.**
 
+> **MANDATORY — terminal-state rationale rule.** When moving any work item to
+> ANY terminal state (done / shipped / wontfix / duplicate / deferred /
+> canceled), you MUST record BOTH (a) WHY it reached that state — the reason
+> the decision was made — and (b) HOW it was verified — the exact test,
+> command, or observation that confirms the outcome. Write both into the item's
+> resolution field AND as a dated comment on the item. Never close an item
+> without this why + how-verified rationale; an item with no rationale must be
+> treated as still open.
+
 1. **Branch hygiene.** If on the default branch (`main`/`master`), create a
    feature branch before committing.
 2. **Commit** the change with a clear message describing the feature and why.

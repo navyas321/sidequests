@@ -135,6 +135,15 @@ a11y/cross-device) done or deemed N/A, and all objective checks are green.
 Do destructive/remote git actions only when the user asks to commit/push or
 clearly expects it.
 
+> **MANDATORY — terminal-state rationale rule.** When moving any work item to
+> ANY terminal state (done / shipped / wontfix / duplicate / deferred /
+> canceled), you MUST record BOTH (a) WHY it reached that state — the reason
+> the decision was made — and (b) HOW it was verified — the exact test,
+> command, or observation that confirms the outcome. Write both into the item's
+> resolution field AND as a dated comment on the item. Never close an item
+> without this why + how-verified rationale; an item with no rationale must be
+> treated as still open.
+
 1. If on the default branch, create a fix branch first.
 2. **Commit** with a message that states the bug, the root cause, and the fix.
 3. Update CHANGELOG / docs if the repo keeps them.
