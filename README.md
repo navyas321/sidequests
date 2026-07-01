@@ -26,6 +26,7 @@ or just `python` them directly.
 | 🖥️ **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off (PC keeps running) — scans existing shortcut hotkeys to avoid collisions, no third-party utility | Windows |
 | 🏃 **[feature](skills/feature/SKILL.md)** | Drive a feature end-to-end through a full agile-scrum SDLC pipeline: scope & define (plan-mode approval gate), implement, test & verify (adversarial review), and release | Any OS |
 | 🐛 **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop: reproduce, fix at the root cause, add a regression test, verify green, and release | Any OS |
+| 🧭 **[agentic-best-practices](skills/agentic-best-practices/SKILL.md)** | A working checklist of Anthropic's current guidance for building with Claude — prompting, agent-vs-workflow design, skills/subagents/hooks/CLAUDE.md, context engineering, tool & MCP design, and reliability/evaluation; deep rationale + sources in a linked companion | Any OS |
 | ⏳ **[usage-limit-guard](skills/usage-limit-guard/SKILL.md)** | Keep a repo-backed autonomous loop making progress across Claude's 5h/weekly usage limits and outages — read local token-burn, detect the limit headlessly, and resume a fresh session from durable repo state (commit-per-item + `CHECKPOINT.json` + journal) instead of `--resume` | Any OS (`git` only) |
 
 ---
