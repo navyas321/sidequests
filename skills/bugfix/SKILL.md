@@ -52,8 +52,17 @@ After classifying, confirm the type at the top of your first status block.
   editing.
 - **A bug fixed without a regression test will come back.** Add a test that
   fails before the fix and passes after, when the repo supports tests.
+- **Evidence, not assertion.** The dominant failure is "looks done" — the fix
+  looks right so you stop before proving it. Never declare the bug fixed on a
+  plausible diff: show the repro failing before and passing after (the exact
+  command + output). Fix the root cause; never suppress or swallow the error to
+  make a check go green.
 - Use a `Task` subagent for an independent review of the fix when the change is
-  non-trivial or touches risky code.
+  non-trivial or touches risky code — but do the diagnosis and fix inline
+  (a bug is a tight, sequential path; spawning agents costs ~4x the tokens and
+  suits parallel or broad read-only work, not a point fix). Give any reviewer
+  the diff + expected behavior only, and scope it to correctness so it doesn't
+  balloon the fix.
 
 ---
 
@@ -142,7 +151,11 @@ clearly expects it.
 > command, or observation that confirms the outcome. Write both into the item's
 > resolution field AND as a dated comment on the item. Never close an item
 > without this why + how-verified rationale; an item with no rationale must be
-> treated as still open.
+> treated as still open. **Don't fake-close:** "HOW verified" must be a real,
+> re-runnable check — the repro passing (command + output), a test result, an
+> observed live run — not "should be fixed" or the mere fact that a patch was
+> written. If you couldn't verify it, leave it open/blocked with that reason,
+> not marked fixed.
 
 1. If on the default branch, create a fix branch first.
 2. **Commit** with a message that states the bug, the root cause, and the fix.
@@ -154,7 +167,9 @@ clearly expects it.
    actually gone in the real environment on the real client path — not just in
    the test harness. If deployment is out of scope, say so.
 6. Update `docs/STATUS.md` if the repo uses it (phase, what was fixed, next
-   step).
+   step). Write it so a post-compaction or fresh session can resume from
+   STATUS + git history alone; commit the fix so the durable state survives a
+   crash or usage-limit reset mid-loop.
 7. **Final report:** root cause, the fix, the regression test, verification
    evidence (including the live check), and any deferred/flagged issues.
 8. **Quick retro.** One line: how the bug slipped in and what would catch the

@@ -61,6 +61,20 @@ confirm with the user if uncertain. Then proceed with the matching pipeline.
   subagents for parallel implementation of independent units and for
   *independent* review (the reviewer must not be the author). Launch
   independent subagents in a single message so they run concurrently.
+- **Right altitude — inline vs. subagent.** Do the work inline when the path is
+  known and sequential (most coding is): spawning agents costs ~4x the tokens
+  and multi-agent is a poor fit for shared context and tight dependencies.
+  Reach for subagents to (a) preserve main-context on a broad read-only sweep,
+  (b) run genuinely independent units in parallel, or (c) get an independent
+  reviewer. Scale effort to the task: 1 agent for a fact-find, a few for
+  comparisons/parallel units. Have each subagent return a condensed summary,
+  not its raw transcript.
+- **Evidence, not assertion.** The dominant failure is "looks done" — output is
+  plausible so the agent stops before verifying. Never claim a stage passed on
+  a plausible-looking result: paste the exact command run and its output, the
+  test result, or the observed run. If you cannot show evidence, the stage is
+  not passed. Fix root causes; never suppress, swallow, or work around an error
+  to make a check go green.
 - **Deterministic fan-out engine (optional).** When a stage benefits from
   large, deterministic parallelism (e.g. reviewing many files, or a broad
   research sweep), the Workflow tool / `/workflows` is the right engine — but
@@ -82,10 +96,14 @@ research + planning**; do not edit code yet.
    "Switch to plan mode (Shift+Tab) so the scope can go through the approval
    gate," or proceed read-only and present the plan via `ExitPlanMode` if that
    tool is available.
-2. **Research the problem.** Read the relevant code, configs, and docs. Use
-   `Grep`/`Glob` to map where the change lands. For unfamiliar libraries/APIs
-   use `WebSearch`/`WebFetch`. For a large unknown codebase, spawn an `Explore`
-   subagent via `Task` to map the area in parallel.
+2. **Orient, then research.** If resuming (fresh or post-compaction session),
+   first read `docs/STATUS.md` and recent git history to recover where prior
+   work left off, and smoke-test that prior work still runs before building on
+   it. Then research the problem: read the relevant code, configs, and docs;
+   use `Grep`/`Glob` to map where the change lands; for unfamiliar
+   libraries/APIs use `WebSearch`/`WebFetch`. For a large unknown codebase,
+   spawn an `Explore` subagent via `Task` to map the area in parallel and
+   return a condensed summary.
 3. **Produce a task breakdown** — the sprint backlog. For each task give:
    - a one-line title (verb-first),
    - the files/areas it touches,
@@ -190,12 +208,17 @@ change actually touches.
      verify on the real target surfaces (e.g. phone + desktop, the actual
      browser over Tailscale), not just the dev machine.
 6. **Code review + adversarial review by an independent subagent.** Spawn a
-   `Task` subagent (a reviewer that did NOT write the code) to review the diff
-   for correctness bugs, missed edge cases, security issues, style/maintain-
-   ability, and unmet acceptance criteria. For broad reviews, run several
-   reviewers in parallel (e.g. correctness, security, tests) in one message.
-   Use a `code-review` skill/command if one exists. Triage findings: fix real
-   issues (loop back to step 1), record the rest.
+   `Task` subagent (a reviewer that did NOT write the code) that sees only the
+   **diff + acceptance criteria**, not your authoring reasoning, and tries to
+   refute the result. Review for correctness bugs, missed edge cases, security
+   issues, style/maintainability, and unmet acceptance criteria. For broad
+   reviews, run several reviewers in parallel (e.g. correctness, security,
+   tests) in one message. Use a `code-review` skill/command if one exists.
+   **Scope the review to correctness and the stated requirements** — a reviewer
+   told to find gaps always finds some, and chasing every one causes
+   over-engineering. Triage findings: fix real correctness/security issues
+   (loop back to step 1), record the rest as follow-ups rather than expanding
+   scope.
 
 **Gate to pass:** all objective checks green AND every acceptance criterion is
 demonstrably met (feature/acceptance verified on the real client path) AND no
@@ -218,7 +241,11 @@ when the user has asked to commit/push or clearly expects it.**
 > command, or observation that confirms the outcome. Write both into the item's
 > resolution field AND as a dated comment on the item. Never close an item
 > without this why + how-verified rationale; an item with no rationale must be
-> treated as still open.
+> treated as still open. **Don't fake-close:** "HOW verified" must be a real,
+> re-runnable check (a command + its output, a test result, an observed live
+> run) — not "should work" or the mere fact that code was written. If you
+> couldn't verify it, ship it as blocked/deferred with that reason stated, not
+> as done.
 
 1. **Branch hygiene.** If on the default branch (`main`/`master`), create a
    feature branch before committing.
@@ -237,7 +264,12 @@ when the user has asked to commit/push or clearly expects it.**
    out of scope (library, PR for someone else to merge), say so explicitly.
 6. **Status update.** If the repo uses `docs/STATUS.md` (session-context
    convention), update it: phase, what this sprint did, exact next step. This
-   keeps a fresh session able to resume.
+   keeps a fresh session able to resume. Write it to survive **context
+   compaction**: a post-compaction (or brand-new) session should resume from
+   STATUS + git history alone, without the current window. For long runs, keep
+   the state durable *during* the sprint too — commit per coherent change with
+   a descriptive message and checkpoint STATUS at each stage gate, so a
+   usage-limit or crash mid-pipeline loses at most one step, not the sprint.
 7. **Final report** to the user: what shipped, how it was verified (acceptance
    + regression + applicable extra testing + live check), branch/PR link, and
    any follow-ups or deferred review findings.
