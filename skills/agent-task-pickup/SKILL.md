@@ -91,6 +91,18 @@ wsjf_score = ( 0.34·severity + 0.24·time_criticality + 0.20·provenance
    divisor); band-first already stops them from crossing tiers, but only honor `effort` set by a trusted
    actor and watch for `type` churn (relabel `feature`→`bug` doubles urgency and halves size).
 
+9. **Gate on structure + human intent, not severity heuristics — or you fight your own autonomy goal.**
+   A gate built from "is it critical? does the title say `security`? is the detail short?" over-gates (a
+   UI card mentioning "permission" gets held; the queue starves) AND, if your principle is *the agent
+   owns the queue*, actively contradicts it by deferring judgement calls to a human. The durable,
+   low-false-positive rails are **structural + intent-based**: (a) a human explicitly PARKED the item (a
+   status like `accepted`/`blocked`), (b) the item isn't directly actionable yet (an `epic` needs
+   decomposition first), (c) file-lease coordination (another live agent holds a file it touches). In the
+   origin deployment the owner removed every severity/keyword/underspecified rail and kept only these
+   three — pickable work jumped ~3× with no loss of safety, because the genuinely-dangerous items were
+   already human-parked. Make the gate's rails a **config knob**, not a fixed policy: how much an
+   autonomous agent may self-assign is a per-deployment decision, not a property of the scorer.
+
 ## Use it
 
 ```python
