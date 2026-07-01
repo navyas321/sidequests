@@ -32,6 +32,12 @@ survive compaction.** Project-root `CLAUDE.md` and the auto-memory store are
 re-injected/re-read; freeform conversation is not. So a well-compacted store means
 the context summarizer has less to preserve, and less is silently lost.
 
+> **Full architecture** — how Claude Code arbitrates memory/skills/tools/hooks, the
+> complete three-layer compaction design + the server-side Compaction API
+> (`compact-2026-01-12`, `pause_after_compaction`), rehydration asymmetries, and the
+> memory/context slash-command reference — is in **[REFERENCE.md](REFERENCE.md)**.
+> Read it for the "why" or a citation; keep this file as the standing runbook.
+
 ---
 
 ## Mental model (why these mechanics matter)
@@ -147,6 +153,18 @@ into a re-read surface **first**:
   summary, so exploration never crowds the main thread.
 - Remember `/rewind` restores prior context (and files); it is not the same as a
   checkpoint of on-disk code.
+
+### Memory & context commands (quick reference)
+
+- `/context` — see what is eating tokens (diagnose first).
+- `/compact [focus]` — summarize now, with optional steering.
+- `/clear` — fresh window between unrelated tasks (the most underused command).
+- `/rewind` — undo edits / restore prior context (even from before a `/clear`).
+- `/resume`, `/branch` — resume a thread; `/branch` forks at a clean point so the
+  original never has to compact.
+- `/memory` — open/browse memory files; `/init` — scaffold a project `CLAUDE.md`.
+
+(Full built-in + custom-command reference is in [REFERENCE.md](REFERENCE.md) §3.)
 
 Report the concrete actions taken (or the exact commands for the user to run).
 

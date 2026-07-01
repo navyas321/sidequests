@@ -19,7 +19,11 @@ less is silently lost.
 
 Distilled from an architecture deep-dive on how Claude Code arbitrates
 memory/skills/tools/hooks and its three-layer compaction design (microcompaction →
-auto-compaction → manual `/compact`).
+auto-compaction → manual `/compact`). The full deep-dive — arbitration internals,
+the complete compaction design + server-side Compaction API, rehydration
+asymmetries, and the memory/context slash-command reference — lives in
+**[REFERENCE.md](REFERENCE.md)** (loaded on demand, like `agentic-best-practices`'
+`PRACTICES.md`).
 
 ## The auditor
 
