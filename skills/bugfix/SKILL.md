@@ -46,8 +46,9 @@ After classifying, confirm the type at the top of your first status block.
 ## Operating principles
 
 - Track the few steps with `TodoWrite` so the loop is visible.
-- **Reproduce before you fix.** A fix you can't tie to a failing observation is
-  a guess. Establish the failing state first.
+- **Reproduce before you fix.** A fix you can't tie to a failing observation
+  is a guess. Establish the failing state first — never skip Stage 1's
+  observed failure; it's what distinguishes a real fix from a guess.
 - **Fix the root cause, not the symptom.** Diagnose why it happens before
   editing.
 - **A bug fixed without a regression test will come back.** Add a test that
@@ -122,16 +123,15 @@ cause is identified. Seed a short backlog with `TodoWrite`.
    behavior must now be correct, observed on the real client path.
 3. **Run the full check set** the repo provides (build, tests, lint,
    typecheck). Loop until all green — never declare done on a red check.
-4. **Verify adjacent functionality with the real client path.** Re-run the
-   full existing checks after the fix is in place, then specifically probe
+4. **Verify adjacent functionality on the real client path.** Re-run the full
+   existing checks after the fix is in place, then specifically probe
    functionality adjacent to the changed code. For server, auth, config, or
-   routing fixes, exercise ALL affected entry points — not just loopback.
-   **Simulate the actual client path:** a web server reached via a reverse
-   proxy must be tested with the proxied `Host` header and the real client IP,
-   not just `127.0.0.1` — a fix can pass local tests yet return "host not
-   allowed" to the phone/browser over Tailscale because the forwarded `Host`
-   differs. Test every key endpoint and auth flow from the real consumer's
-   perspective.
+   routing fixes, exercise ALL affected entry points and auth flows — not
+   just the happy path, and **not loopback only**. Example: a server behind a
+   reverse proxy must be tested with the proxied `Host` header and real
+   client IP, not just `127.0.0.1` — a fix can pass locally yet return "host
+   not allowed" to the phone/browser over Tailscale because the forwarded
+   `Host` differs.
 5. **Other testing as applicable** — apply only what the fix actually touches,
    skip the rest explicitly:
    - **Security:** if the bug or fix touches auth, input handling, secrets, or
@@ -211,53 +211,18 @@ live where applicable, docs/status updated, final report + retro delivered.
 ## Notes
 
 - Self-contained and project-agnostic: needs only `git`; `gh` optional.
-- Reproduce-first is the rule that distinguishes a real fix from a guess —
-  never skip Stage 1's observed failure.
 
 ## Central scrum board (optional, env-configured)
 
-If the environment variable `SCRUM_CENTRAL_BOARD` is set, write all run files
-to that directory instead of cwd-relative `data/workflow/`. This lets a hub
-(e.g. a personal dashboard) aggregate runs from every project on the machine
-into one visible board.
+Identical mechanism to `/feature` — the canonical how-to lives in
+`${CLAUDE_SKILL_DIR}/../feature/SKILL.md` § "Central scrum board": the
+`SCRUM_CENTRAL_BOARD` / `SCRUM_CENTRAL_BACKLOG` env vars (cwd-relative
+fallback when unset), the run-file JSON schema, write-the-file-as-soon-as-
+Stage-1-begins, atomic `<path>.tmp`-then-rename writes, `status`/`updatedAt`
+updates at each stage gate, and `project` naming the repo you actually worked
+in (not the hub). A bug run differs only in:
 
-**How to use:**
-
-1. Set `SCRUM_CENTRAL_BOARD` to an absolute path of a directory that your
-   dashboard's server globs for `*.json` run files, for example:
-   `SCRUM_CENTRAL_BOARD=/path/to/my-hub/data/workflow`
-2. Optionally set `SCRUM_CENTRAL_BACKLOG` to an absolute path of a
-   `backlog.json` file the hub reads, so backlog items from any project appear
-   on the hub's Backlog board.
-3. If either variable is unset, fall back to the cwd-relative paths
-   (`data/workflow/<RUNKEY>.json` and `data/backlog.json`).
-
-**Run-file schema** (write exactly this shape):
-
-```json
-{
-  "id": "<RUNKEY>",
-  "project": "<the actual repo/project you are working in — not the hub repo>",
-  "type": "bug",
-  "session": "<short-session-slug>",
-  "title": "<one-line bug title>",
-  "updatedAt": "<ISO timestamp>",
-  "stages": [
-    {"key": "reproduce", "label": "Reproduce & diagnose", "status": "active", "tasks": [...]},
-    {"key": "fix",       "label": "Fix",                  "status": "todo",   "tasks": []},
-    {"key": "test",      "label": "Regression-test",      "status": "todo",   "tasks": []},
-    {"key": "release",   "label": "Release",              "status": "todo",   "tasks": []}
-  ]
-}
-```
-
-- **Write the file as soon as Stage 1 begins** so the board shows the run in
-  progress immediately. Update `status` and `updatedAt` at each stage gate.
-- **Use atomic writes:** write to `<path>.tmp` then rename, so the board never
-  reads a half-written file.
-- The `project` field must name the repo you were working in (not the hub), so
-  runs from different projects are distinguishable on the board.
-
-**RUNKEY format:** `<PREFIX>-BG-<NN>` where PREFIX is a short all-caps project
-tag and NN is a zero-padded incrementing number unique within the board
-directory.
+- `"type": "bug"`, with stages `reproduce` ("Reproduce & diagnose") → `fix`
+  ("Fix") → `test` ("Regression-test") → `release` ("Release").
+- **RUNKEY format:** `<PREFIX>-BG-<NN>` (short all-caps project tag +
+  zero-padded number unique within the board directory).

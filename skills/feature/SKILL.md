@@ -57,29 +57,25 @@ confirm with the user if uncertain. Then proceed with the matching pipeline.
   exactly one task `in_progress` at a time unless subagents run in parallel.
 - **Gates are real.** Never start implementing before the scope is approved.
   Never release before verification is green.
-- **Subagents for fan-out and independence.** Use the `Task` tool to spawn
-  subagents for parallel implementation of independent units and for
-  *independent* review (the reviewer must not be the author). Launch
-  independent subagents in a single message so they run concurrently.
-- **Right altitude — inline vs. subagent.** Do the work inline when the path is
-  known and sequential (most coding is): spawning agents costs ~4x the tokens
-  and multi-agent is a poor fit for shared context and tight dependencies.
-  Reach for subagents to (a) preserve main-context on a broad read-only sweep,
-  (b) run genuinely independent units in parallel, or (c) get an independent
-  reviewer. Scale effort to the task: 1 agent for a fact-find, a few for
-  comparisons/parallel units. Have each subagent return a condensed summary,
-  not its raw transcript.
+- **Subagents — fan-out at the right altitude.** Do the work inline when the
+  path is known and sequential (most coding is): spawning agents costs ~4x the
+  tokens and multi-agent is a poor fit for shared context and tight
+  dependencies. Reach for `Task` subagents to (a) preserve main-context on a
+  broad read-only sweep, (b) run genuinely independent units in parallel, or
+  (c) get an *independent* reviewer (the reviewer must not be the author).
+  Launch independent subagents in a single message so they run concurrently;
+  scale effort to the task (1 agent for a fact-find, a few for
+  comparisons/parallel units) and have each return a condensed summary, not
+  its raw transcript. For genuinely large deterministic fan-out (reviewing
+  many files, a broad research sweep) the Workflow tool / `/workflows` is the
+  right engine; for normal features, parallel `Task` subagents are simpler
+  and sufficient.
 - **Evidence, not assertion.** The dominant failure is "looks done" — output is
   plausible so the agent stops before verifying. Never claim a stage passed on
   a plausible-looking result: paste the exact command run and its output, the
   test result, or the observed run. If you cannot show evidence, the stage is
   not passed. Fix root causes; never suppress, swallow, or work around an error
   to make a check go green.
-- **Deterministic fan-out engine (optional).** When a stage benefits from
-  large, deterministic parallelism (e.g. reviewing many files, or a broad
-  research sweep), the Workflow tool / `/workflows` is the right engine — but
-  only reach for it when the fan-out is genuinely large. For normal features,
-  parallel `Task` subagents are simpler and sufficient.
 - **Report at every gate.** End each stage with a short status block so the
   user can follow the sprint.
 - **Model selection for spawned work** (subagents, headless runs). Default:
@@ -212,15 +208,13 @@ change actually touches.
      the feature change is in place.
    - Add a fails-before / passes-after test specific to this change (unit,
      integration, or documented manual repro).
-   - **Verify adjacent functionality with the real client path.** For any
+   - **Verify adjacent functionality on the real client path.** For any
      server, auth, config, or routing change, exercise ALL affected entry
-     points — not just the happy path. Critically: **simulate the actual
-     client path, not loopback only.** Example: a web server reached via a
-     reverse proxy must be tested with the proxied `Host` header and the real
-     client IP, not just `127.0.0.1` — a change can pass local tests yet
-     return "host not allowed" or misbehave for the phone/browser over
-     Tailscale because the forwarded `Host` differs. Test every key endpoint
-     and auth flow from the perspective of the real consumer.
+     points and auth flows — not just the happy path, and **not loopback
+     only**. Example: a server behind a reverse proxy must be tested with the
+     proxied `Host` header and real client IP, not just `127.0.0.1` — a
+     change can pass locally yet return "host not allowed" to the
+     phone/browser over Tailscale because the forwarded `Host` differs.
 5. **Other testing as applicable** — apply only the dimensions the change
    actually touches; skip the rest explicitly:
    - **Integration / end-to-end:** if the feature spans modules, services, or
@@ -251,12 +245,11 @@ change actually touches.
    (loop back to step 1), record the rest as follow-ups rather than expanding
    scope.
 
-**Gate to pass:** all objective checks green AND every acceptance criterion is
-demonstrably met (feature/acceptance verified on the real client path) AND no
-regressions in adjacent functionality (real client path included) AND the
-applicable extra testing (integration/security/perf/a11y/cross-device) is done
-or explicitly deemed N/A AND code/adversarial review surfaces no unaddressed
-correctness or security issue.
+**Gate to pass:** all objective checks green AND every acceptance criterion
+demonstrably met on the real client path AND no regressions in adjacent
+functionality AND the applicable extra testing (integration/security/perf/
+a11y/cross-device) done or explicitly deemed N/A AND code/adversarial review
+surfaces no unaddressed correctness or security issue.
 
 ---
 
