@@ -235,6 +235,33 @@ cache TTL automatically** — your cache stays warm through breaks at no extra c
 
 ---
 
+## 8. Know your POOLS — session, weekly, model-tier (and budget FLEETS against them)
+
+Limits are not one number. Model them separately or a fleet will blindside you
+(learned 2026-07-01: a 6-agent wave died mid-flight on the session limit and the
+harness retried each dead agent — "agents kept respawning" until the reset):
+
+- **5h session pool** — rolling window across the interactive session AND every
+  subagent it spawns. **Fleet arithmetic:** N parallel agents burn ~N× your solo
+  rate; a wave you'd survive solo can hit the wall in minutes. Before launching a
+  fleet, ask: *can this wave FINISH before the reset boundary?* If the reset is
+  <1h away and the wave is big, wait for the reset instead.
+- **Weekly pool(s)** — all-models + a Sonnet-only sub-pool on Max. Tier fleets
+  down (Sonnet/Haiku lanes) to spend the cheap pool first.
+- **Model/tier pools** — top-tier models (Fable/Opus) may draw dedicated caps;
+  routine lanes on cheaper tiers preserve top-tier headroom for judgment-heavy
+  lanes.
+- **Headless/credits pool** — `claude -p` watchers draw monthly credits, not the
+  interactive caps (see §7) — but exhausted credits fail the same way; guard both.
+
+**When a fleet dies on a limit:** do NOT relaunch into the wall (each retry burns
+preflight/startup tokens and reads as respawn-thrash). Checkpoint durable state,
+suppress automatic resumes until the reset (limit-aware backoff in watchdogs +
+preflight-abort paths), then resume the orchestrator WITH result caching (e.g.
+Workflow resumeFromRunId) so completed lanes return cached instead of re-running.
+
+---
+
 ## TL;DR checklist (paste into a session-start habit)
 
 - [ ] Interactive dev on Max → **`/model opusplan`** (Opus plans, Sonnet executes).
