@@ -32,6 +32,7 @@ or just `python` them directly.
 | 🎯 **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task — severity, provenance, time-criticality, unblocking, quick-wins — while gating risky work (security/architecture/underspecified) to a human lane; ships `pickup.py` + tests | Any OS |
 | 🧾 **[receipts](skills/receipts/SKILL.md)** | Unbiased "show me the receipts" audit — an independent sub-agent checks every instruction from a time window against what actually shipped (git/backlog/code) and files a ticket per miss | Any OS |
 | 🩺 **[watcher-reliability](skills/watcher-reliability/SKILL.md)** | Preflight pattern for headless Claude/MCP watchers — verify auth, MCP servers, and repo state up front so scheduled runs fail loud at the start, not silently mid-run | Any OS |
+| 🏷️ **[releasing](skills/releasing/SKILL.md)** | Cut clean releases the right way — continuous-beta / tag-cut-stable: bump the beta every wave, generate a changelog from git, and (on request) tag an annotated stable. Includes a release-*cadence* rule so releases never lapse | Any OS (`git` only) |
 
 ---
 
