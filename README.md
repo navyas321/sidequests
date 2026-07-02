@@ -28,6 +28,10 @@ or just `python` them directly.
 | 🐛 **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop: reproduce, fix at the root cause, add a regression test, verify green, and release | Any OS |
 | 🧭 **[agentic-best-practices](skills/agentic-best-practices/SKILL.md)** | A working checklist of Anthropic's current guidance for building with Claude — prompting, agent-vs-workflow design, skills/subagents/hooks/CLAUDE.md, context engineering, tool & MCP design, and reliability/evaluation; deep rationale + sources in a linked companion | Any OS |
 | ⏳ **[usage-limit-guard](skills/usage-limit-guard/SKILL.md)** | Keep a repo-backed autonomous loop making progress across Claude's 5h/weekly usage limits and outages — read local token-burn, detect the limit headlessly, and resume a fresh session from durable repo state (commit-per-item + `CHECKPOINT.json` + journal) instead of `--resume` | Any OS (`git` only) |
+| 🚦 **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Make a fleet of agents share one backlog without collisions — enforce the work lifecycle at the API/data layer (create/pickup/pause/close gates) plus file-lease + bulletin coordination; ships `coord.py` + `gates.py` | Any OS |
+| 🎯 **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task — severity, provenance, time-criticality, unblocking, quick-wins — while gating risky work (security/architecture/underspecified) to a human lane; ships `pickup.py` + tests | Any OS |
+| 🧾 **[receipts](skills/receipts/SKILL.md)** | Unbiased "show me the receipts" audit — an independent sub-agent checks every instruction from a time window against what actually shipped (git/backlog/code) and files a ticket per miss | Any OS |
+| 🩺 **[watcher-reliability](skills/watcher-reliability/SKILL.md)** | Preflight pattern for headless Claude/MCP watchers — verify auth, MCP servers, and repo state up front so scheduled runs fail loud at the start, not silently mid-run | Any OS |
 
 ---
 
