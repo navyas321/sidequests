@@ -64,7 +64,11 @@ After classifying, confirm the type at the top of your first status block.
   the diff + expected behavior only, and scope it to correctness so it doesn't
   balloon the fix.
 - **Multi-actor collision protocol** (when other agents/sessions share the
-  repo; full protocol in the `agent-coordination-gates` skill): read the work
+  repo; full protocol in the `agent-coordination-gates` skill): self-register
+  at pipeline start — if the repo has `scripts/coord.py`, set
+  `COORD_ACTOR=<session-slug>` and run
+  `python scripts/coord.py heartbeat --note "bugfix <item-id>: <title>"`, and
+  run `coord.py release-all` at pipeline end or on pause; read the work
   item's COMMENTS before starting (handoffs/designs live there); claim files
   before editing (`coord.py check-file`/`claim-file`, held = pick other work);
   **targeted `git add <files>`, NEVER `git add -A`** with live actors (it

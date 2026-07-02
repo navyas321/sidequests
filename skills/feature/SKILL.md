@@ -94,15 +94,20 @@ confirm with the user if uncertain. Then proceed with the matching pipeline.
 - **Multi-actor collision protocol** (when other agents/sessions share the
   repo — a coordination bus like `scripts/coord.py` or live-session signals
   present; full protocol in the `agent-coordination-gates` skill):
-  1. **Read the work item's COMMENTS before starting** — handoff notes, prior
+  1. **Self-register at pipeline start.** If the repo has `scripts/coord.py`,
+     set `COORD_ACTOR=<session-slug>` and run
+     `python scripts/coord.py heartbeat --note "<pipeline> <item-id>: <title>"`
+     so the session is visible on the bus while it works. At pipeline end
+     (Release complete, or on pause), run `coord.py release-all`.
+  2. **Read the work item's COMMENTS before starting** — handoff notes, prior
      findings, and whole implementation plans live there, not in the title.
-  2. **Claim files before editing** (`coord.py check-file` / `claim-file`);
+  3. **Claim files before editing** (`coord.py check-file` / `claim-file`);
      held-by-a-live-actor = pick other work. Release when done.
-  3. **Targeted `git add <files>` — NEVER `git add -A`** with live actors: it
+  4. **Targeted `git add <files>` — NEVER `git add -A`** with live actors: it
      sweeps their in-flight edits into your commit.
-  4. **Check the bus periodically** during long runs and announce what you
+  5. **Check the bus periodically** during long runs and announce what you
      ship, so other actors don't duplicate or collide with your work.
-  5. **Pausing = a gate.** Leaving work in-progress unfinished requires a
+  6. **Pausing = a gate.** Leaving work in-progress unfinished requires a
      handoff comment: progress so far, WHY paused, how the state was left safe.
 
 ---
