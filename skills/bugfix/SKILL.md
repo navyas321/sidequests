@@ -63,6 +63,14 @@ After classifying, confirm the type at the top of your first status block.
   suits parallel or broad read-only work, not a point fix). Give any reviewer
   the diff + expected behavior only, and scope it to correctness so it doesn't
   balloon the fix.
+- **Multi-actor collision protocol** (when other agents/sessions share the
+  repo; full protocol in the `agent-coordination-gates` skill): read the work
+  item's COMMENTS before starting (handoffs/designs live there); claim files
+  before editing (`coord.py check-file`/`claim-file`, held = pick other work);
+  **targeted `git add <files>`, NEVER `git add -A`** with live actors (it
+  sweeps their in-flight edits into your commit); check the bus periodically +
+  announce what ships; pausing unfinished work requires a handoff comment
+  (progress, why, how the state was left safe).
 
 ---
 

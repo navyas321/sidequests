@@ -58,6 +58,11 @@ library over one JSON blackboard:
 any file → `check-file` then `claim-file`. On task pickup → **read the item's COMMENTS first** (handoffs +
 prior findings live there). Commit via `coord.py git`. `announce` what shipped. `release-all` at end.
 
+**Targeted `git add <files>` — NEVER `git add -A`** while other actors are live. Leases only cover files an
+actor remembered to claim; a blanket `-A` sweeps every OTHER actor's in-flight, uncommitted edits into your
+commit (a real incident: a watcher's `git add -A` committed 6 lines of another agent's half-finished work).
+Stage exactly the files your item touched, plus your own journal/board/coordination records.
+
 ## Why it works
 The metadata the gates force (owner, resolution, verification, progress-on-pause) is *exactly* what another
 agent needs to coordinate — so enforcing it at the write path makes the backlog self-coordinating and the
