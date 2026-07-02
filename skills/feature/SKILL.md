@@ -82,6 +82,15 @@ confirm with the user if uncertain. Then proceed with the matching pipeline.
   parallel `Task` subagents are simpler and sufficient.
 - **Report at every gate.** End each stage with a short status block so the
   user can follow the sprint.
+- **Model selection for spawned work** (subagents, headless runs). Default:
+  inherit the session model — override only with a reason. When you do pick:
+  **Fable 5** (`claude-fable-5`, Mythos-class tier above Opus) for the hardest
+  reasoning — architecture decisions, deep audits, gnarly root-cause hunts,
+  ultracode-style multi-agent orchestration. **Opus 4.8** for strong general
+  dev work. **Sonnet 5** for routine well-scoped implementation (fast +
+  economical). **Haiku 4.5** for cheap mechanical probes — smoke checks, test
+  sessions, bulk file classification. Match the tier to the hardest judgment
+  the task needs, not to its size.
 - **Multi-actor collision protocol** (when other agents/sessions share the
   repo — a coordination bus like `scripts/coord.py` or live-session signals
   present; full protocol in the `agent-coordination-gates` skill):
