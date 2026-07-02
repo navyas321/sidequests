@@ -105,6 +105,27 @@ Get-Process claude | Select-Object Id, StartTime
 A `CoworkVMService` "stopped → starting" pair = an app auto-restart; any in-app
 cron/watcher armed before it is gone. Migrate that job to Flow A.
 
+## Flow D — no-idle goal driving (interactive session + background fleets)
+
+An interactive session driving a long `/goal` can look idle while background
+work runs, and nothing external wakes it if it silently dies. The stack that
+prevents real idling — and the rules that prevent *perceived* idling:
+
+- **Layers that exist:** the `/goal` Stop hook (blocks premature turn-end);
+  `/loop` ScheduleWakeup self-pacing (its fallback delay is the visible gap);
+  task-notifications (background workflows/agents wake the loop immediately —
+  the primary signal; the wakeup is only a safety net); a resume watcher at
+  usage-limit reset (see `usage-limit-guard`); and the fully-headless autodev
+  lane (scheduled watcher + watchdog) that works regardless.
+- **Rules while a goal + fleet is active:**
+  1. Keep the ScheduleWakeup fallback ≤ ~20 min.
+  2. Before every sleep, post a coordination heartbeat + bulletin note
+     (what's running, what wakes you) so dashboards show the drive as LIVE.
+  3. Say in the visible turn text that fleets are running in the background —
+     the transcript is what the human watches.
+  4. Belt-and-braces: have the host watchdog alert (not kill) when a
+     goal-driving actor goes silent >30 min while open work remains.
+
 ## Notes & limits
 
 - Tasks run as the **logged-on user** (needs the user logged in for the stored
