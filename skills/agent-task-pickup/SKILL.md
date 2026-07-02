@@ -102,6 +102,17 @@ wsjf_score = ( 0.34·severity + 0.24·time_criticality + 0.20·provenance
    three — pickable work jumped ~3× with no loss of safety, because the genuinely-dangerous items were
    already human-parked. Make the gate's rails a **config knob**, not a fixed policy: how much an
    autonomous agent may self-assign is a per-deployment decision, not a property of the scorer.
+10. **Provenance weight must follow VERIFIABILITY, not label prestige — and reopens are a first-class
+   signal.** A 2026-07 research spike on the origin board found the trust order inverted: the only
+   SERVER-STAMPED human channel (phone quick-capture, stamped by the API at write time) scored 0.6
+   while honor-system `user-*` labels (any agent writing the store can claim them) scored 1.0 — the
+   spoofable channel outranked the provable one. Weight sources by how hard they are to fake, not by
+   how human they sound. Same spike: a human REOPENING a closed item (terminal→open with fresh
+   evidence) is one of the strongest priority signals in triage research, yet most scorers treat the
+   reopened item as just another open row that orders by FIFO luck. Server-stamp `reopenedAt` +
+   `reopenCount` at the transition and give a bounded, decaying boost. Corollary of the tie-cluster
+   finding: when your factors stop discriminating (top-N all identical score → pure created-ASC), the
+   scorer has silently become FIFO — add the discriminating signal rather than tuning weights blind.
 
 ## Use it
 
