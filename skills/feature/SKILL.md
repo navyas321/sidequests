@@ -158,6 +158,10 @@ builds. Then proceed to dedicated verification.
 
 ## Stage 3 — Test & verify  (gate: acceptance + regression green + review + security clean)
 
+> Read **[RELIABILITY.md](RELIABILITY.md)** (same folder) at this gate and again
+> at Release — hard-won invariants from real production failures (post-change
+> smoke test, ASCII-only scripts, "task runs but does nothing", encoding traps).
+
 Goal: prove the feature **does the new thing it was asked to do**, is correct,
 and broke nothing — in rounds, until green. Testing here is broader than
 regression: it covers the new behavior plus whatever testing dimensions the

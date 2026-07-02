@@ -98,6 +98,10 @@ cause is identified. Seed a short backlog with `TodoWrite`.
 
 ## Stage 3 — Regression-test & verify  (gate: was-red-now-green + no adjacent regressions + checks clean)
 
+> Read **[../feature/RELIABILITY.md](../feature/RELIABILITY.md)** at this gate
+> and again at Release — shared hard-won invariants for the scrum pipeline
+> (post-change smoke test, ASCII-only scripts, encoding traps).
+
 1. **Add a regression test** that fails without the fix and passes with it
    (when the repo has a test harness). If there is genuinely no test
    infrastructure, document a manual repro that now passes.
