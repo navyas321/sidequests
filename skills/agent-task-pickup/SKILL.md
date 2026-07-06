@@ -113,6 +113,19 @@ wsjf_score = ( 0.34·severity + 0.24·time_criticality + 0.20·provenance
    `reopenCount` at the transition and give a bounded, decaying boost. Corollary of the tie-cluster
    finding: when your factors stop discriminating (top-N all identical score → pure created-ASC), the
    scorer has silently become FIFO — add the discriminating signal rather than tuning weights blind.
+11. **An OPEN item that still carries an owner is mid-handoff, not free work — gate it.** (2026-07
+   incident, origin board:) a session paused a conversation-directive item back to `open` but kept
+   `owner` (a reserve/handoff marker). The autonomous picker treated open-status as free, picked it,
+   confidently mis-disposed it with a fabricated rationale — an independent review even APPROVED the
+   plausible-sounding cancel — then re-picked it after the close: pure token churn on work another
+   session already held, and a wrong disposition on the board. Add an **owner rail** to the gate
+   (coordination-class, like file-leases — not a human-judgment gate): `open` + non-empty `owner` ⇒
+   gated, with pause semantics "clear owner = released to anyone; keep owner = reserved". Two
+   companion write-path guards close the loop: agents may never flip a TERMINAL item straight to
+   in-progress (reopen explicitly first, server-stamped), and disposal states (canceled/wontfix/
+   duplicate) **fail CLOSED** when the independent close-reviewer is unavailable — fail-open is only
+   safe for `done`, because an unreviewed disposal is precisely the lazy-close class the gate exists
+   to stop.
 
 ## Use it
 
