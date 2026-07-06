@@ -89,3 +89,17 @@ deployment of these gates:
 3. **Auto run-file at pickup.** If your edit-gate requires live bookkeeping (in-progress item + fresh run
    file), CREATE the run file server-side inside the pickup mutation and auto-complete it on terminal
    close. Hand-written bookkeeping lags reality and produces false gate denials (~5 in one session).
+4. **Parallelize the EXECUTION, not just the plan (2026-07-06, BL-1087).** A worktree-fleet design
+   easily ships with a planner that builds file-disjoint parallel batches and an executor that quietly
+   runs them serially — the throughput loss is invisible because everything still completes. Wire the
+   wave through a thread pool (each unit already isolated in its own worktree/branch), serialize ONLY
+   the shared-git-state steps (worktree add/registry on a lock; merges on the git lease), and prove it
+   with a time-scaled test asserting wall-clock ≈ max(items), not sum.
+5. **Group small items per sub-session (2026-07-06, BL-1077).** Every headless spawn re-pays the full
+   context load (~10-15k tokens of project docs + prompt). Batch file-disjoint SMALL items (task/spike,
+   low/medium priority) up to ~3 per sub-session — one context load, several items, one merge; grouped
+   failures must reopen EVERY member. Keep bugs/features/criticals per-item.
+6. **Wait on process exit, never pipe EOF (2026-07-06, BL-1090, Windows).** A headless child that spawns
+   its own children (agents, MCP servers) leaks inherited pipe write-handles; `communicate()` then blocks
+   until the grandchildren exit — the fleet "idles waiting for other agents" and misclassifies finished
+   runs as timeouts. Feed stdin + drain stdout/stderr on daemon threads and block only in `p.wait()`.
