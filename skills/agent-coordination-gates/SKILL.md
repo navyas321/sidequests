@@ -73,3 +73,19 @@ queue with no double-picks, no silent drops, no clobbering, and a verifiable tra
 - `coord.py` — the lease + bus CLI/library (stdlib; run `python coord.py --help`).
 - `gates.py` — the four lifecycle gates as a framework-agnostic `apply_update(item, patch)` (wire storage).
 - Adapt the verification-keyword regex + TTLs to your project; keep the "one enforced write path" rule.
+
+
+## Field-tested improvements (life-in-tabs, 2026-07-05, BL-1042 adversarial process review)
+Three fixes that removed the biggest frictions in a ~30-review-cycle production session; port them into any
+deployment of these gates:
+1. **Reviewer context + prior-rejection feedback.** Independent close-reviewers judging only title+detail+
+   resolution oscillate across draws (identical evidence rejected then approved; hallucinated objections).
+   Feed the reviewer the item's last ~2 comments AND its own previous rejection reason with the instruction
+   to judge whether THAT objection is now addressed. Verdicts converge; reviewers even self-verify files.
+2. **Capture-time fuzzy dedupe.** One incident arrives as several messages; each minted id costs a full
+   review cycle later. At capture, match normalized titles against open items <48h old (sequence ratio
+   >=0.85 OR token-containment >=0.9 for prefix/subset resends); on match, append the message as a comment
+   on the original instead of a new id. Conservative thresholds + a forceNew opt-out + fail-open.
+3. **Auto run-file at pickup.** If your edit-gate requires live bookkeeping (in-progress item + fresh run
+   file), CREATE the run file server-side inside the pickup mutation and auto-complete it on terminal
+   close. Hand-written bookkeeping lags reality and produces false gate denials (~5 in one session).
