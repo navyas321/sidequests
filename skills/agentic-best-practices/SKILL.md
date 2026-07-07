@@ -219,3 +219,16 @@ is plausible and the human becomes the verification loop.
   keep an immutable feature/test list as JSON (removing tests is unacceptable);
   read git history + progress log at session start; **one feature per session**;
   smoke-test prior work before new work.
+
+
+<!-- lesson:hard-stop-1200et-2026-07-07 -->
+## Lesson (2026-07-07): autonomous scrum stack, proven end-to-end (BL-1252)
+A fully autonomous SDLC ran with zero user input: manager-watchdog decomposed an epic into role-tagged
+children ([SDE1]/[SDE2]/[SDE3]/[QA]/[Release] title tags), the **persistent-session-drainer** autopilot
+(one long-lived session draining in-place with amortized context -- the winning default over classic +
+the dropped worktree orchestrator) implemented them, and the context engine fed prior art at each pickup.
+Guardrails that made it work: (a) type epics `epic` so the pickup gate never hands a whole epic to a
+drainer; (b) a realistic headless acceptance bar (`analyze` clean + `test` green, NOT device/emulator
+verification the host can't run); (c) benign empty-queue drainer exit == 0, not an error (avoids
+false-alarm 'Failed fast' cards); (d) 'who is working' views must union coord actors AND the owners of
+inprogress backlog items. Reference: life-in-tabs BL-1252 / memory autonomous-scrum-e2e-proof.

@@ -136,3 +136,16 @@ prevents real idling — and the rules that prevent *perceived* idling:
   auth and a gitignored `.claude/settings.local.json`.
 - Keep trade/write automations to a tight `--allowedTools` server scope and a
   prompt-level guard (idempotency, circuit breaker). Test read-only first.
+
+
+<!-- lesson:hard-stop-1200et-2026-07-07 -->
+## Lesson (2026-07-07): exact-wall-clock hard stop
+To stop a running agent session at an EXACT time (e.g. noon ET, and *only* then), register a Windows
+Scheduled Task `schtasks /Create /SC ONCE /SD <date> /ST <HH:MM>` that runs a **pure-stdlib** Python
+script -- never a `claude` spawn (the trigger is usually usage exhaustion, so a model call may be
+blocked at fire time). Pre-author every nuanced artifact (memory, skill edits, resumption notes) and
+embed them as literal strings the script writes verbatim; keep it idempotent. A scheduled task cannot
+cancel a live session's ScheduleWakeup /loop or /goal, so bridge with a **sentinel file** the session
+checks on each wake. Verify `Get-TimeZone` (schtasks fires at host-local time) and add an in-script ET
+guard that refuses to act before the target. Validate with a `--selftest` path + `schtasks /Query`
+(Next Run Time). Reference: life-in-tabs `scripts/scheduled_hard_stop_1200et.py` (BL-1265).

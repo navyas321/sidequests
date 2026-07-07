@@ -1,40 +1,90 @@
 # sidequests
 
-> A grab-bag of helper tools — each one born as a *side quest* while solving
-> something else.
+> An open-source sink of reusable, project-agnostic **agent-ops tooling** and
+> **Claude Code skills** — each one born as a *side quest* while building
+> something else, then distilled here so it's reusable everywhere.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
+![skills](https://img.shields.io/badge/skills-21-2ea043)
+
+What started as two one-off migrations (Google Photos → iCloud de-dupe, and
+song/source identification from a clip) has grown into a catalog of runbooks
+distilled from real problems solved across the author's projects — a personal
+hub, autonomous dev fleets, an agentic trading stack, and a gaming rig. The bulk
+of it is **agent operations**: how to make a fleet of autonomous Claude agents
+pick up the right work, coordinate without collisions, stay alive across usage
+limits and app restarts, and never silently stall.
 
 Every tool is packaged as a [Claude Code](https://code.claude.com) **skill** — a
-runbook the agent follows, with bundled Python scripts — but each script also
-runs perfectly well on its own from the command line. Use them through Claude,
-or just `python` them directly.
+runbook the agent follows, most with bundled stdlib scripts — but the scripts
+also run perfectly well on their own from the command line. Use them through
+Claude, or just `python` them directly.
 
 ---
 
-## Contents
+## Catalog
 
-| Tool | What it does | Platform |
-| --- | --- | --- |
-| 🔁 **[session-context](skills/session-context/SKILL.md)** | Keep continuity across sessions — orient a new agent on where the project stands, or checkpoint state so the next session picks up exactly where this one left off | Any OS |
-| 🧠 **[memory-compaction](skills/memory-compaction/SKILL.md)** | Keep an agent's memory lean and its context compaction-resilient — compact the `MEMORY.md` index + one-fact files (merge duplicates, prune stale, split bloat, fix drift) and steer live `/compact` so durable facts survive. Ships a read-only auditor | Any OS |
-| 🧠 **[context-engine](skills/context-engine/SKILL.md)** | Local, zero-spend recall for an agent — a stdlib BM25 index (+ optional CPU LSA/hybrid) over your notes/backlog so a fresh session finds prior decisions & dupes at task pickup, no vector DB or embeddings API | Any OS |
-| 🎵 **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) | Any OS |
-| 📷 **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's missing — no duplicates | Windows + iCloud for Windows |
-| 🎮 **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses & preserves existing shortcuts, backs up, round-trip-verifies | Windows / Linux / macOS |
-| 🌈 **[hdr-gaming-setup](skills/hdr-gaming-setup/SKILL.md)** | Set up and PROVE the Windows 11 HDR gaming stack on an OLED/HDR monitor + NVIDIA RTX GPU: OSD recipe, Windows HDR Calibration (HGIG first-clip), RTX HDR/Dynamic Vibrance values with the gamma math, and a driver-log engagement test — plus a stdlib ground-truth probe (EDID HDR metadata, active HDR state, live color profile, Auto HDR overrides) | Windows + NVIDIA RTX |
-| ⏰ **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote-control session survive desktop-app restarts/updates/crashes — moves the schedule out of the app into Windows Task Scheduler (headless `claude -p`) + an app watchdog | Windows |
-| 🖥️ **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off (PC keeps running) — scans existing shortcut hotkeys to avoid collisions, no third-party utility | Windows |
-| 🏃 **[feature](skills/feature/SKILL.md)** | Drive a feature end-to-end through a full agile-scrum SDLC pipeline: scope & define (plan-mode approval gate), implement, test & verify (adversarial review), and release | Any OS |
-| 🐛 **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop: reproduce, fix at the root cause, add a regression test, verify green, and release | Any OS |
-| 🧭 **[agentic-best-practices](skills/agentic-best-practices/SKILL.md)** | A working checklist of Anthropic's current guidance for building with Claude — prompting, agent-vs-workflow design, skills/subagents/hooks/CLAUDE.md, context engineering, tool & MCP design, and reliability/evaluation; deep rationale + sources in a linked companion | Any OS |
-| ⏳ **[usage-limit-guard](skills/usage-limit-guard/SKILL.md)** | Keep a repo-backed autonomous loop making progress across Claude's 5h/weekly usage limits and outages — read local token-burn, detect the limit headlessly, and resume a fresh session from durable repo state (commit-per-item + `CHECKPOINT.json` + journal) instead of `--resume` | Any OS (`git` only) |
-| 🚦 **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Make a fleet of agents share one backlog without collisions — enforce the work lifecycle at the API/data layer (create/pickup/pause/close gates) plus file-lease + bulletin coordination; ships `coord.py` + `gates.py` | Any OS |
-| 🎯 **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task — severity, provenance, time-criticality, unblocking, quick-wins — while gating risky work (security/architecture/underspecified) to a human lane; ships `pickup.py` + tests | Any OS |
-| 🧾 **[receipts](skills/receipts/SKILL.md)** | Unbiased "show me the receipts" audit — an independent sub-agent checks every instruction from a time window against what actually shipped (git/backlog/code) and files a ticket per miss | Any OS |
-| 🩺 **[watcher-reliability](skills/watcher-reliability/SKILL.md)** | Preflight pattern for headless Claude/MCP watchers — verify auth, MCP servers, and repo state up front so scheduled runs fail loud at the start, not silently mid-run | Any OS |
-| 🏷️ **[releasing](skills/releasing/SKILL.md)** | Cut clean releases the right way — continuous-beta / tag-cut-stable: bump the beta every wave, generate a changelog from git, and (on request) tag an annotated stable. Includes a release-*cadence* rule so releases never lapse | Any OS (`git` only) |
+21 skills, grouped by theme. Each links to its runbook; one line is the gist.
+
+### 🤖 Building agents & multi-agent orchestration
+
+| Skill | What it does |
+| --- | --- |
+| **[agentic-best-practices](skills/agentic-best-practices/SKILL.md)** | A working checklist of Anthropic's current guidance for building with Claude — prompting, agent-vs-workflow design, skills/subagents/hooks/CLAUDE.md, context engineering, tool & MCP design, and reliability. |
+| **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task (severity, provenance, unblocking, quick-wins) while gating risky work to a human lane. Ships `pickup.py` + tests. |
+| **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Let a fleet of agents share ONE backlog without collisions — enforce the create/pickup/pause/close lifecycle at the data layer, plus a file-lease + bulletin bus. Ships `coord.py` + `gates.py`. |
+| **[anti-idle-anti-stall](skills/anti-idle-anti-stall/SKILL.md)** | Two deterministic guards that keep an agent fleet draining and never idling — a Stop hook that blocks parking while work remains, and a stall-reaper that frees a stalled shield-holder's leases. |
+
+### 🩺 Watchers, reliability & durable automation
+
+| Skill | What it does |
+| --- | --- |
+| **[watcher-reliability](skills/watcher-reliability/SKILL.md)** | Preflight pattern for headless Claude/MCP watchers — verify auth, MCP servers, codec, and repo state up front so scheduled runs fail loud at the start, not silently mid-run. Ships `watcher-preflight.ps1`. |
+| **[watcher-cleanup](skills/watcher-cleanup/SKILL.md)** | Scan for and clean dead/orphaned custom watchers — reconcile the prompt-file + scheduled-task + health-record trio so config litter and stale health entries don't accumulate. |
+| **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote session survive desktop-app restarts/updates/crashes — move the schedule into Windows Task Scheduler (headless `claude -p`) + an app watchdog. |
+
+### 🏃 Dev SDLC (agile-scrum)
+
+| Skill | What it does |
+| --- | --- |
+| **[feature](skills/feature/SKILL.md)** | Drive a feature end-to-end through a full agile-scrum SDLC — scope & design (plan-mode gate), implement, test & verify (adversarial review), release. |
+| **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop — reproduce, fix the root cause, add a regression test, verify green, release. |
+| **[releasing](skills/releasing/SKILL.md)** | Cut clean releases the right way — continuous-beta / tag-cut-stable: bump beta, generate a changelog from git, and (on request) tag an annotated stable. |
+| **[receipts](skills/receipts/SKILL.md)** | Unbiased "show me the receipts" audit — an independent sub-agent checks every instruction from a time window against what actually shipped (git/backlog/code) and files a ticket per miss. |
+
+### 🧠 Context, memory & continuity
+
+| Skill | What it does |
+| --- | --- |
+| **[session-context](skills/session-context/SKILL.md)** | Keep continuity across sessions — orient a new agent on where a project stands, or checkpoint state so the next session resumes exactly where this one left off. |
+| **[memory-compaction](skills/memory-compaction/SKILL.md)** | Keep an agent's memory lean and its context compaction-resilient — compact the `MEMORY.md` index + one-fact files (merge, prune, split, fix drift) and steer live `/compact` so durable facts survive. |
+| **[context-engine](skills/context-engine/SKILL.md)** | Local, zero-spend recall for an agent — a stdlib BM25 index (+ optional CPU LSA/hybrid) over notes/backlog so a fresh session finds prior decisions & dupes at pickup. No vector DB or embeddings API. |
+
+### ⏳ Usage limits & cost control
+
+| Skill | What it does |
+| --- | --- |
+| **[usage-limit-guard](skills/usage-limit-guard/SKILL.md)** | Keep a repo-backed autonomous loop making progress across Claude's 5h/weekly limits and outages — read local token-burn, detect the limit headlessly, and resume from durable repo state instead of `--resume`. |
+| **[github-actions-cost-control](skills/github-actions-cost-control/SKILL.md)** | Diagnose and stop GitHub Actions free-tier minute burn — find the biggest burners (paused-project crons, macOS 10× runners, burst-commit CI) and fix them. |
+
+### 🎮 Gaming rig & desktop (Windows)
+
+| Skill | What it does |
+| --- | --- |
+| **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses, preserves, backs up, round-trip-verifies. Cross-platform. |
+| **[hdr-gaming-setup](skills/hdr-gaming-setup/SKILL.md)** | Set up and PROVE the Windows 11 HDR gaming stack on an OLED + NVIDIA RTX rig — monitor OSD, Windows HDR Calibration (HGIG), RTX HDR + Dynamic Vibrance, and a driver-log engagement test. |
+| **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off while the PC keeps running (downloads/streaming continue); wake with any mouse move or keypress. |
+
+### 🎬 Media & migration (the original side quests)
+
+| Skill | What it does |
+| --- | --- |
+| **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's genuinely missing — no duplicates. Windows + iCloud for Windows. |
+| **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) — handles live covers and un-catalogued originals that Shazam can't. |
+
+Several skills below have a deeper walkthrough — the rest are fully documented in
+their own `SKILL.md`.
 
 ---
 
@@ -373,40 +423,21 @@ sidequests/
 |   +-- plugin.json          # this repo is one plugin...
 |   +-- marketplace.json     # ...and a marketplace exposing it
 +-- skills/
-    +-- session-context/
-    |   +-- SKILL.md          # the runbook (orient + checkpoint flows)
-    |   +-- README.md
-    |   +-- scripts/
-    |       +-- snapshot.sh   # git branch/log/status + gh pr list
-    +-- source-finder/
-    |   +-- SKILL.md          # the runbook (the fallback ladder)
-    |   +-- requirements.txt
-    |   +-- scripts/          # extract_audio, fingerprint, transcribe, separate_vocals, frames
-    +-- photo-reconciler/
-    |   +-- SKILL.md          # the runbook (workflow + gotchas + safety)
-    |   +-- requirements.txt
-    |   +-- scripts/reconcile.py
-    +-- display-off-shortcut/
-    |   +-- SKILL.md          # the runbook (install + hotkey conflict logic)
-    |   +-- scripts/          # Turn-Off-Display.ps1 / .vbs + install-shortcut.ps1
-    +-- feature/
-    |   +-- SKILL.md          # full agile-scrum feature pipeline (4 stages)
-    |   +-- SCRUM.md          # shared process reference (stages, gates, DoD)
-    |   +-- README.md         # overview + usage for feature + bugfix bundle
-    +-- bugfix/
-        +-- SKILL.md          # lightweight scrum bug loop (reproduce-first)
-    +-- steam-shortcut/
-    |   +-- SKILL.md          # the runbook (safe shortcuts.vdf editing)
-    |   +-- scripts/
-    +-- usage-limit-guard/
-    |   +-- SKILL.md          # the runbook (usage / guard / checkpoint / resume flows)
-    |   +-- README.md
-    |   +-- scripts/          # token_burn.py, detect_limit.py (stdlib only)
-    +-- context-engine/
-        +-- SKILL.md          # the runbook (build / query / recall-at-pickup)
-        +-- README.md
-        +-- scripts/          # context_engine.py (BM25 + optional LSA hybrid) + requirements.txt
+    +-- <skill>/
+        +-- SKILL.md          # the runbook (required — the only thing a skill needs)
+        +-- README.md         # human-facing overview (some skills)
+        +-- scripts/ | *.py   # bundled stdlib reference impl (some skills)
+        +-- *.md              # supporting reference (SCRUM.md, PRACTICES.md, ...)
 ```
+
+Every skill lives under `skills/<name>/`. A `SKILL.md` (with a `description:` in
+its frontmatter, or an `H1 — one-line` heading) is all that's required to be
+discoverable; many skills also ship a stdlib reference implementation you can run
+standalone — e.g. `agent-coordination-gates/coord.py` + `gates.py`,
+`agent-task-pickup/pickup.py` (+ tests), `context-engine/scripts/context_engine.py`
+(BM25 + optional LSA hybrid), `usage-limit-guard/scripts/` (`token_burn.py`,
+`detect_limit.py`), `source-finder/scripts/` (audio/fingerprint/transcribe),
+`photo-reconciler/scripts/reconcile.py`, and `watcher-reliability/watcher-preflight.ps1`.
 
 ## Updating
 
