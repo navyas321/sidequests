@@ -103,3 +103,13 @@ deployment of these gates:
    its own children (agents, MCP servers) leaks inherited pipe write-handles; `communicate()` then blocks
    until the grandchildren exit — the fleet "idles waiting for other agents" and misclassifies finished
    runs as timeouts. Feed stdin + drain stdout/stderr on daemon threads and block only in `p.wait()`.
+7. **Don't let the close-gate over-tighten into a lockout (2026-07-07, BL-1230).** The mirror hazard of
+   gate #close: stacking anti-lazy-close layers (adversarial LLM reviewer on every terminal transition +
+   an N-reject "route to human" cap) eventually rejects LEGIT, evidence-backed closes and then PERMANENTLY
+   locks them — an agent literally cannot close its own real work ("you should be able to close your own
+   tasks"). Recalibrate: the LLM reviewer VERIFIES the evidence and DEFAULTS TO APPROVE once the
+   deterministic gates already passed (resolution + a concrete verification token); at the reject cap a
+   `done` close AUTO-APPROVES with an `auditFlag` (auditable + reversible) instead of a permanent block,
+   while DISPOSALS (wontfix/canceled/duplicate) keep the human route (an unreviewed disposal is the exact
+   lazy-DROP class the gate exists for). Principle: gate on EVIDENCE, not on an LLM's subjective
+   re-litigation, and make over-rejection auditable + reversible — never a permanent lockout.
