@@ -19,6 +19,7 @@ or just `python` them directly.
 | --- | --- | --- |
 | 🔁 **[session-context](skills/session-context/SKILL.md)** | Keep continuity across sessions — orient a new agent on where the project stands, or checkpoint state so the next session picks up exactly where this one left off | Any OS |
 | 🧠 **[memory-compaction](skills/memory-compaction/SKILL.md)** | Keep an agent's memory lean and its context compaction-resilient — compact the `MEMORY.md` index + one-fact files (merge duplicates, prune stale, split bloat, fix drift) and steer live `/compact` so durable facts survive. Ships a read-only auditor | Any OS |
+| 🧠 **[context-engine](skills/context-engine/SKILL.md)** | Local, zero-spend recall for an agent — a stdlib BM25 index (+ optional CPU LSA/hybrid) over your notes/backlog so a fresh session finds prior decisions & dupes at task pickup, no vector DB or embeddings API | Any OS |
 | 🎵 **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) | Any OS |
 | 📷 **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's missing — no duplicates | Windows + iCloud for Windows |
 | 🎮 **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses & preserves existing shortcuts, backs up, round-trip-verifies | Windows / Linux / macOS |
@@ -329,6 +330,41 @@ new-repo setup checklist.
 
 ---
 
+## 🧠 context-engine
+
+Give an agent local recall over its own history so a fresh session doesn't re-solve a
+decided question or file a duplicate. **BM25** lexical ranking (stdlib-only,
+deterministic) over a folder of notes and/or a JSONL/JSON backlog, with an **optional
+CPU-only** LSA + Reciprocal-Rank-Fusion hybrid arm (`numpy` + `scikit-learn`) that
+switches on automatically when present. No embeddings API, no vector DB, no GPU, no
+new spend.
+
+**With Claude:** ask *"search my backlog/notes for prior work on X"* or *"did we
+already decide this?"* (it auto-triggers), or run `/context-engine query "…"`.
+
+**Standalone:**
+
+```bash
+CE=skills/context-engine/scripts/context_engine.py
+
+# index notes and/or a JSONL backlog (auto-rebuilds when sources change)
+python $CE build --root ./notes --jsonl ./backlog.jsonl
+
+# recall at task pickup — task title + a keyword or two
+python $CE query "add dark mode toggle" --root ./notes --jsonl ./backlog.jsonl --top 5
+
+# built? stale? doc counts? hybrid available?
+python $CE status --root ./notes --jsonl ./backlog.jsonl
+```
+
+The killer pattern is **un-skippable recall**: enforce the query server-side the
+moment a task moves to in-progress and stamp the top hits onto the item — the agent
+gets prior art with zero action. `CONTEXT_ENGINE_HYBRID=0` forces BM25-only. Tune the
+BM25/LSA constants against your own (query → relevant-ids) judgments if your corpus
+differs a lot — not by intuition.
+
+---
+
 ## Repo layout
 
 ```
@@ -363,9 +399,13 @@ sidequests/
     |   +-- SKILL.md          # the runbook (safe shortcuts.vdf editing)
     |   +-- scripts/
     +-- usage-limit-guard/
-        +-- SKILL.md          # the runbook (usage / guard / checkpoint / resume flows)
+    |   +-- SKILL.md          # the runbook (usage / guard / checkpoint / resume flows)
+    |   +-- README.md
+    |   +-- scripts/          # token_burn.py, detect_limit.py (stdlib only)
+    +-- context-engine/
+        +-- SKILL.md          # the runbook (build / query / recall-at-pickup)
         +-- README.md
-        +-- scripts/          # token_burn.py, detect_limit.py (stdlib only)
+        +-- scripts/          # context_engine.py (BM25 + optional LSA hybrid) + requirements.txt
 ```
 
 ## Updating

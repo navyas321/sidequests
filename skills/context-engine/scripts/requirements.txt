@@ -1,0 +1,5 @@
+# context-engine — the CORE (BM25) needs NO dependencies (Python stdlib only).
+# These are ONLY for the optional CPU-only dense/hybrid arm (LSA + Reciprocal Rank
+# Fusion). If they are absent, the engine transparently stays BM25-only.
+numpy>=1.21
+scikit-learn>=1.0
