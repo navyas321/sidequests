@@ -394,6 +394,15 @@ def status(root=".", jsonl=None, index_file=None):
 # ── CLI ──────────────────────────────────────────────────────────────────────────
 
 def _main(argv):
+    # Windows consoles default to cp1252 and raise UnicodeEncodeError when a snippet/title
+    # holds a non-ASCII char (em-dash, ellipsis, accents). Force UTF-8 with backslash-escape
+    # fallback so the human-readable CLI never crashes on real corpus text (the --json path
+    # already uses ensure_ascii=False into a utf-8-safe json.dumps).
+    for _s in (sys.stdout, sys.stderr):
+        try:
+            _s.reconfigure(encoding="utf-8", errors="backslashreplace")
+        except Exception:
+            pass
     ap = argparse.ArgumentParser(prog="context_engine.py", description=__doc__.strip().splitlines()[0])
     ap.add_argument("cmd", choices=["build", "query", "status"])
     ap.add_argument("text", nargs="*", help="query text (for the query command)")

@@ -122,6 +122,12 @@ a small set of (query → relevant-doc-ids) judgments, measure Recall@K / MRR, a
 only changes that improve a metric while regressing none. On that corpus, a BM25+
 delta and a x3 title boost were measured and *dropped* because they hurt recall.
 
+**Measured on the field corpus (45 queries / 185 judgments, life-in-tabs BL-1104→BL-1195):**
+adding the Tier-2 hybrid arm lifted overall **Recall@5 0.447 → 0.492**, Hit@5 0.711 → 0.800,
+MRR 0.665 → 0.686, and **concept-following Recall@5 by ~32% (0.320 → 0.410)** — all while
+**preserving keyword MRR (~0.88)**. That guardrail is the point: the dense arm only earns its
+place if it lifts concept recall *without* regressing keyword precision.
+
 Enable/disable the dense arm without code changes via `CONTEXT_ENGINE_HYBRID=0`
 (force BM25-only) — useful if `numpy`/`scikit-learn` are installed but you want pure
 determinism or minimal startup cost.
