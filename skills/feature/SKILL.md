@@ -132,7 +132,14 @@ research + planning**; do not edit code yet.
    use `Grep`/`Glob` to map where the change lands; for unfamiliar
    libraries/APIs use `WebSearch`/`WebFetch`. For a large unknown codebase,
    spawn an `Explore` subagent via `Task` to map the area in parallel and
-   return a condensed summary.
+   return a condensed summary. If the repo ships a local context/recall engine
+   (e.g. life-in-tabs: `python scripts/context_engine.py query "<item title>"
+   --top 5` or `GET /api/context/query?q=` — how-to in
+   `scripts/prompts/context-recall.md`), query it FIRST with the item title:
+   it surfaces prior related items, decisions, and rules, and a high-scoring
+   exact hit usually means duplicate/already-done. If its settings toggle
+   reports disabled, proceed without recall — never flip the toggle (user
+   intent).
 3. **Produce a task breakdown** — the sprint backlog. For each task give:
    - a one-line title (verb-first),
    - the files/areas it touches,

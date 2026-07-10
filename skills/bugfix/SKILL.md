@@ -88,6 +88,11 @@ After classifying, confirm the type at the top of your first status block.
    and ask for more detail; do not proceed to a speculative fix.
 2. **Locate the root cause.** Use `Grep`/`Glob`/`Read` to trace from symptom to
    cause. For a large/unknown area, spawn an `Explore` subagent via `Task`.
+   If the repo ships a local context/recall engine (e.g. life-in-tabs:
+   `python scripts/context_engine.py query "<symptom keywords>" --top 5`),
+   query it early — prior items often carry the same bug's history, RCA, or a
+   rule explaining the intended behavior. Honor its settings toggle if
+   disabled.
    State the root cause in one or two sentences before editing.
 3. **Decide the fix approach** and note any risk/blast radius. For a non-trivial
    fix, briefly weigh alternatives (point fix vs. addressing the underlying
