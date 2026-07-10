@@ -77,6 +77,16 @@ deep version with rationale and source links is in
   effort-scaling rules (1 agent for fact-finding; several for comparisons; 10+
   with defined roles for deep research). Run independent tools/subagents
   concurrently.
+- **Nested delegation** (Claude Code ≥ v2.1.172): a subagent can spawn its own
+  subagents, capped at depth 5 below the main conversation (a depth-5 agent
+  gets no Agent tool). Reporting is **upward-only** — subagents never
+  coordinate as peers; use agent teams when peers must talk. Nest only when
+  intermediate back-and-forth should never reach the parent context — the
+  canonical case is a reviewer that spawns one verifier per finding, so the
+  debate stays buried and a single clean verdict surfaces. Depth is a cap, not
+  a target: stay shallow by default, and make every delegated prompt
+  **self-contained** — a worker handed incomplete context produces rework that
+  erases the token/speed gain.
 - Prefer **upgrading the model** over merely doubling the token budget. Start on
   raw LLM APIs; if you use the Claude Agent SDK, understand what it does under
   the hood. Sandbox before granting real autonomy.
@@ -91,7 +101,9 @@ deep version with rationale and source links is in
   broadly-applicable, non-guessable facts (custom bash commands, non-default
   style, test runners, repo etiquette, env quirks). Exclude anything inferable
   from code, standard conventions, or that changes often. Check it into git; use
-  gitignored `CLAUDE.local.md` for personal notes.
+  gitignored `CLAUDE.local.md` for personal notes. **Compounding engineering:**
+  each time Claude makes a mistake, capture the corrective rule in CLAUDE.md so
+  every future session inherits the fix.
 - **Create a Skill** when you keep pasting the same checklist, or when a
   CLAUDE.md section grew from a fact into a procedure.
   - Every skill is a directory with `SKILL.md` + YAML frontmatter. The
@@ -111,6 +123,8 @@ deep version with rationale and source links is in
   "when to delegate" description, and the *minimum* tool set (e.g. Read/Grep/Glob
   for a read-only reviewer). Use them to preserve main-context, enforce tool
   constraints, and route cheap work to faster models via the `model` field.
+  Subagents can spawn subagents (depth ≤ 5, upward-reporting only) — see
+  "Nested delegation" above for when that pays.
 - **Hooks** for things that must happen *every time* — they are deterministic
   while CLAUDE.md is only advisory. Configure in `settings.json` on the right
   lifecycle event (PreToolUse/PostToolUse/Stop…). Treat them as a security

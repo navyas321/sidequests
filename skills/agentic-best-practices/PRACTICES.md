@@ -134,6 +134,19 @@ route cheap work to faster models (e.g. Haiku) via the `model` field. Delegate
 research and verification explicitly. Tell a reviewer subagent to flag only gaps
 affecting correctness or stated requirements, not style.
 
+Since Claude Code v2.1.172 a **subagent can spawn its own subagents**, capped at
+five levels below the main conversation — a depth-5 subagent does not receive
+the Agent tool, so the hierarchy hard-stops there. Reporting is strictly
+upward: nested subagents do not coordinate as peers (use agent teams when peers
+must talk). Nest only when the intermediate traffic should never reach the
+parent context. The canonical pattern: a reviewer dispatches one verifier per
+finding, the reviewer/verifier back-and-forth stays buried two levels down, and
+a single clean verdict lands in the main window. Treat the depth limit as a cap,
+not a target — each hop re-pays prompt overhead, and a worker handed incomplete
+context produces output no better than linear execution plus rework that offsets
+the speed gain, so every delegated prompt must be self-contained (objective,
+inputs, output format, boundaries).
+
 **Hooks:** for actions that must happen every time with zero exceptions — hooks
 are deterministic, CLAUDE.md is advisory. Configure in `settings.json` with the
 right lifecycle event (PreToolUse, PostToolUse, Stop, etc.) and matchers; ask

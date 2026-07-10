@@ -63,7 +63,8 @@ After classifying, confirm the type at the top of your first status block.
   (a bug is a tight, sequential path; spawning agents costs ~4x the tokens and
   suits parallel or broad read-only work, not a point fix). Give any reviewer
   the diff + expected behavior only, and scope it to correctness so it doesn't
-  balloon the fix.
+  balloon the fix. A finding-heavy reviewer may nest a verifier subagent per
+  finding (upward-reporting only) so only the confirmed verdict returns here.
 - **Multi-actor collision protocol** (when other agents/sessions share the
   repo; full protocol in the `agent-coordination-gates` skill): self-register
   at pipeline start — if the repo has `scripts/coord.py`, set

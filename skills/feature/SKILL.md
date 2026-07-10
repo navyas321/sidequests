@@ -66,7 +66,13 @@ confirm with the user if uncertain. Then proceed with the matching pipeline.
   Launch independent subagents in a single message so they run concurrently;
   scale effort to the task (1 agent for a fact-find, a few for
   comparisons/parallel units) and have each return a condensed summary, not
-  its raw transcript. For genuinely large deterministic fan-out (reviewing
+  its raw transcript. Subagents may themselves delegate (nested, depth-capped
+  at 5, upward-reporting only — no peer coordination): nest only to keep
+  intermediate back-and-forth out of this pipeline's context (e.g. a reviewer
+  spawning a verifier per finding), keep delegation shallow by default, and
+  make every delegated prompt self-contained — a worker handed incomplete
+  context produces rework that costs more than the delegation saved. For
+  genuinely large deterministic fan-out (reviewing
   many files, a broad research sweep) the Workflow tool / `/workflows` is the
   right engine; for normal features, parallel `Task` subagents are simpler
   and sufficient.
@@ -239,6 +245,9 @@ change actually touches.
    issues, style/maintainability, and unmet acceptance criteria. For broad
    reviews, run several reviewers in parallel (e.g. correctness, security,
    tests) in one message. Use a `code-review` skill/command if one exists.
+   For a finding-heavy review, the reviewer may spawn one verifier subagent
+   per finding (nested delegation) so the verify/refute back-and-forth stays
+   out of the pipeline's context and only confirmed findings return.
    **Scope the review to correctness and the stated requirements** — a reviewer
    told to find gaps always finds some, and chasing every one causes
    over-engineering. Triage findings: fix real correctness/security issues
