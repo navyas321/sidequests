@@ -626,7 +626,7 @@ def announce(text, kind="info", ttl=None, actor=None):
     if kind not in ("info", "warn", "act"):
         kind = "info"
     entry = {"at": _now_iso(), "from": actor, "kind": kind,
-             "text": str(text)[:500], "ttl": int(ttl) if ttl else BULLETIN_DEFAULT_TTL}
+             "text": str(text)[:4000], "ttl": int(ttl) if ttl else BULLETIN_DEFAULT_TTL}
 
     def fn(coord):
         bul = coord.get("_bulletin")
@@ -678,7 +678,7 @@ def status():
             "me": who == me,
             "claimed": list(sec.get("claimed") or []),
             "files": [f.get("path") for f in (sec.get("files") or []) if isinstance(f, dict)],
-            "note": (sec.get("note") or "")[:280],
+            "note": (sec.get("note") or "")[:2000],
             "heartbeat": ts_raw,
             "age_s": int(age) if age is not None else None,
         })
