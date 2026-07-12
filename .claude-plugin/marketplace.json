@@ -6,7 +6,7 @@
     {
       "name": "sidequests",
       "source": "./",
-      "description": "21 project-agnostic Claude Code skills + agent-ops runbooks distilled from real projects. Agent orchestration (agent-task-pickup, agent-coordination-gates, anti-idle-anti-stall, agentic-best-practices); watchers & durable automation (watcher-reliability, watcher-cleanup, durable-claude-automation); agile-scrum SDLC (feature, bugfix, releasing, receipts); context & memory (session-context, memory-compaction, context-engine); usage & cost (usage-limit-guard, github-actions-cost-control); gaming rig & desktop (steam-shortcut, hdr-gaming-setup, display-off-shortcut); and the original media/migration side quests (photo-reconciler, source-finder)."
+      "description": "23 project-agnostic Claude Code skills + agent-ops runbooks distilled from real projects. Agent orchestration (agent-task-pickup, agent-coordination-gates, anti-idle-anti-stall, two-agent-build-test-loop, agentic-best-practices); watchers & durable automation (watcher-reliability, watcher-cleanup, durable-claude-automation); agile-scrum SDLC (feature, bugfix, releasing, receipts); context & memory (session-context, memory-compaction, context-engine); usage & cost (usage-limit-guard, github-actions-cost-control); gaming rig & desktop (steam-shortcut, hdr-gaming-setup, display-off-shortcut, isolated-streaming-host-mock); and the original media/migration side quests (photo-reconciler, source-finder)."
     }
   ]
 }

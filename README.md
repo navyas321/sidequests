@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
-![skills](https://img.shields.io/badge/skills-21-2ea043)
+![skills](https://img.shields.io/badge/skills-23-2ea043)
 
 What started as two one-off migrations (Google Photos → iCloud de-dupe, and
 song/source identification from a clip) has grown into a catalog of runbooks
@@ -25,7 +25,7 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-21 skills, grouped by theme. Each links to its runbook; one line is the gist.
+23 skills, grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
@@ -35,6 +35,7 @@ Claude, or just `python` them directly.
 | **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task (severity, provenance, unblocking, quick-wins) while gating risky work to a human lane. Ships `pickup.py` + tests. |
 | **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Let a fleet of agents share ONE backlog without collisions — enforce the create/pickup/pause/close lifecycle at the data layer, plus a file-lease + bulletin bus. Ships `coord.py` + `gates.py`. |
 | **[anti-idle-anti-stall](skills/anti-idle-anti-stall/SKILL.md)** | Two deterministic guards that keep an agent fleet draining and never idling — a Stop hook that blocks parking while work remains, and a stall-reaper that frees a stalled shield-holder's leases. |
+| **[two-agent-build-test-loop](skills/two-agent-build-test-loop/SKILL.md)** | An autonomous SDLC where a BUILD agent self-verifies and ships a test-ready artifact, and a TEST agent on REAL target hardware runs a command-level scorecard and opens a report PR — the git handoff is the loop. Captures the branch/CI-tier/release conventions + the stale-alpha, merge-fusion, and device-gated traps. |
 
 ### 🩺 Watchers, reliability & durable automation
 
@@ -75,6 +76,7 @@ Claude, or just `python` them directly.
 | **[steam-shortcut](skills/steam-shortcut/SKILL.md)** | Add a non-Steam game (any `.exe`/launcher) to the Steam library by safely editing `shortcuts.vdf` — parses, preserves, backs up, round-trip-verifies. Cross-platform. |
 | **[hdr-gaming-setup](skills/hdr-gaming-setup/SKILL.md)** | Set up and PROVE the Windows 11 HDR gaming stack on an OLED + NVIDIA RTX rig — monitor OSD, Windows HDR Calibration (HGIG), RTX HDR + Dynamic Vibrance, and a driver-log engagement test. |
 | **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off while the PC keeps running (downloads/streaming continue); wake with any mouse move or keypress. |
+| **[isolated-streaming-host-mock](skills/isolated-streaming-host-mock/SKILL.md)** | Stand up an ISOLATED mock game-streaming host (Sunshine/Apollo/Vibepollo) next to a real one for testing a client — copied prefix + offset ports + virtual-display + kill-by-port — without disrupting real gaming or the real host. Ships `start-mock.ps1` / `stop-mock.ps1` / `mock.conf`. |
 
 ### 🎬 Media & migration (the original side quests)
 
