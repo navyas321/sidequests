@@ -160,3 +160,28 @@ without reading anything else>
   only requires `git` to be available. `gh` is optional (PRs section degrades
   gracefully).
 - Running orient or checkpoint multiple times in the same session is safe.
+
+## Flow: end-of-wave HANDOFF doc (added 2026-07-14 — the 5-min cache-TTL counter)
+
+**Why:** the Anthropic prompt cache has a ~5-minute TTL. Any pause longer than that means the
+next message into a LONG-running session re-reads the entire conversation uncached — slow and
+expensive — and it recurs on every subsequent gap. The session still works (no state is lost);
+it's a cost/latency tax proportional to conversation length. The durable counter is NOT keeping
+the old session warm — it's making a FRESH session cheap to start.
+
+**What:** at every wave/milestone end (and before any expected long user absence), write/refresh
+`docs/HANDOFF.md` in the project repo — a paste-ready brief for a brand-new session:
+
+1. **State line** — what is live/shipped right now (versions, releases, services).
+2. **Just happened** — the last wave in ~10 bullets with item ids and commits.
+3. **Open threads** — every in-flight item, who owns it, its gate/wake condition.
+4. **Decisions pending on the user** — the exact questions, with recommendations.
+5. **How to resume** — the kickoff line to paste ("Read docs/HANDOFF.md + agents/SHARED.md,
+   cold-start per protocol, pick up <item>"), pointers to PLAN/STATUS/retro docs, and the
+   fleet lineup if the project runs multi-session.
+
+Keep it under ~1 page; it supersedes its previous version (git history keeps the old ones).
+The next session reads HANDOFF.md + the repo's standing docs and is productive in one turn
+instead of replaying a 100-turn transcript. Pairs with: `checkpoint` flow above (STATUS.md is
+the rolling per-session state; HANDOFF.md is the wave-boundary brief), the `usage-limit-guard`
+checkpoint pattern, and `fable-fleet-orchestration` (the coordinator writes it as part of wrap).

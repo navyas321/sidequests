@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
-![skills](https://img.shields.io/badge/skills-23-2ea043)
+![skills](https://img.shields.io/badge/skills-24-2ea043)
 
 What started as two one-off migrations (Google Photos → iCloud de-dupe, and
 song/source identification from a clip) has grown into a catalog of runbooks
@@ -25,12 +25,13 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-23 skills, grouped by theme. Each links to its runbook; one line is the gist.
+24 skills, grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
 | Skill | What it does |
 | --- | --- |
+| **[fable-fleet-orchestration](skills/fable-fleet-orchestration/SKILL.md)** | Run a fleet of USER-VISIBLE peer sessions (a top-tier coordinator orchestrating opus/sonnet/haiku workers the user spins up) — headcount planning, tier files + kickoff prompts, bus/backlog substrate, review gates, anti-idle. The working model behind a ~20-item overnight release. |
 | **[agentic-best-practices](skills/agentic-best-practices/SKILL.md)** | A working checklist of Anthropic's current guidance for building with Claude — prompting, agent-vs-workflow design, skills/subagents/hooks/CLAUDE.md, context engineering, tool & MCP design, and reliability. |
 | **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task (severity, provenance, unblocking, quick-wins) while gating risky work to a human lane. Ships `pickup.py` + tests. |
 | **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Let a fleet of agents share ONE backlog without collisions — enforce the create/pickup/pause/close lifecycle at the data layer, plus a file-lease + bulletin bus. Ships `coord.py` + `gates.py`. |
