@@ -113,3 +113,19 @@ deployment of these gates:
    while DISPOSALS (wontfix/canceled/duplicate) keep the human route (an unreviewed disposal is the exact
    lazy-DROP class the gate exists for). Principle: gate on EVIDENCE, not on an LLM's subjective
    re-litigation, and make over-rejection auditable + reversible — never a permanent lockout.
+
+## Field learnings (2026-07-14 hearth-forge wave)
+
+- **Check every bus-post response**: a length-limited bulletin (500 chars) SILENTLY rejects long
+  posts — two coordinator orders bounced unnoticed until the response was checked. Long content
+  goes in item comments; the bus carries one-line pointers.
+- **Resource windows need a claim/ACK handshake**: a queue-empty check is NOT restart-safe (a
+  backend restart killed a job announced 29s earlier that hadn't reached the queue yet). Post
+  intent, wait for ACK or ~60s of silence from anyone who announced resource work in the last
+  5 min, then act.
+- **Lease-required list for shared files**: bus discipline does not prevent two actors' edits to
+  the same lock/bench file landing in each other's commits — enumerate the shared files that
+  REQUIRE a lease and enforce the habit in every repo the fleet touches, not just the primary one.
+- **Liveness = >=2 corroborating signals** (bus/commit recency, item updates, activity endpoint,
+  session list) before challenging or taking over — a single probe can land in a legitimate
+  trough (model-swap gap read as a dead loop).

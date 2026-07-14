@@ -144,3 +144,11 @@ cap, all gate triggers, determinism, null-degradation).
 *Origin: extracted from the life-in-tabs multi-agent backlog picker (`backlog_next_items`). Designed via
 a research → 3-proposal → adversarial-critic workflow; the 8 lessons above are the critics' high-severity
 findings, fixed.*
+
+## Field learning (2026-07-14): split-orders beat holds
+
+When a task is partially blocked (e.g. its GPU/demo phase waits on another actor), do not let the
+assignee hold the WHOLE task: split the order into the unblocked majority (research, downloads,
+curation, docs — starts NOW) and the blocked minority (sequenced behind the real dependency).
+An orchestrator that re-sequences the moment an agent reports empty-queue converts wait time into
+progress; gating work behind ceremonial milestones (rather than real dependencies) idles agents.

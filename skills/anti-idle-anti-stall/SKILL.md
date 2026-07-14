@@ -84,3 +84,19 @@ Reference impl: `life-in-tabs/scripts/stall_reaper.py` (sibling to `autodev_watc
 4. Verify: hook ALLOWs on a drained board / live fleet, BLOCKs with the injected pickup when work
    remains + no drainer; reaper `--dry-run` reports candidates and never touches the exempt watcher.
 5. Record the learnings in memory so the *behavior* rule survives even if a hook is disabled.
+
+## Field learnings (2026-07-14 hearth-forge wave — interactive session fleets)
+
+Beyond the two deterministic guards, interactive multi-SESSION fleets need three more patterns
+(proven overnight, see the fable-fleet-orchestration skill for the full model):
+
+- **Self-armed bus monitor before ANY park**: a parked session cannot see the bus; arm a
+  persistent Monitor on the coordination feed (compare TIMESTAMPS, not list length — a capped
+  ring buffer never changes length; that exact bug stalled a worker on a superseded hold) with a
+  silence alarm (~15 min) and API-down alerts, so silence is never mistaken for success.
+- **Direct session nudge as the escalation**: when a parked/stale session misses its clearance,
+  a session-manager message (user-visible) revives it in minutes; bus posts alone cannot wake it.
+- **Reaper counts ITEM updates, not bus heartbeats**: actors heartbeating the bus still lost 8
+  held items to the item-reaper in one night. During long holds: bus heartbeat every 15 min for
+  peers AND a one-line item comment every ~90 min for the reaper. Also: split-order partial
+  dependencies — "waiting on a partial dependency is not a hold"; the unblocked 70% starts now.
