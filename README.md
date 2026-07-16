@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
-![skills](https://img.shields.io/badge/skills-24-2ea043)
+![skills](https://img.shields.io/badge/skills-25-2ea043)
 
 What started as two one-off migrations (Google Photos → iCloud de-dupe, and
 song/source identification from a clip) has grown into a catalog of runbooks
@@ -25,7 +25,7 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-24 skills, grouped by theme. Each links to its runbook; one line is the gist.
+25 skills, grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
@@ -37,6 +37,7 @@ Claude, or just `python` them directly.
 | **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Let a fleet of agents share ONE backlog without collisions — enforce the create/pickup/pause/close lifecycle at the data layer, plus a file-lease + bulletin bus. Ships `coord.py` + `gates.py`. |
 | **[anti-idle-anti-stall](skills/anti-idle-anti-stall/SKILL.md)** | Two deterministic guards that keep an agent fleet draining and never idling — a Stop hook that blocks parking while work remains, and a stall-reaper that frees a stalled shield-holder's leases. |
 | **[two-agent-build-test-loop](skills/two-agent-build-test-loop/SKILL.md)** | An autonomous SDLC where a BUILD agent self-verifies and ships a test-ready artifact, and a TEST agent on REAL target hardware runs a command-level scorecard and opens a report PR — the git handoff is the loop. Captures the branch/CI-tier/release conventions + the stale-alpha, merge-fusion, and device-gated traps. |
+| **[local-coding-agent](skills/local-coding-agent/SKILL.md)** | Make a small LOCAL coding model (opencode + Ollama, 4B on ~8 GB) genuinely competent instead of "useless" — model choice on tight RAM, the config that stops it denying its own tools, teaching correct tool use via exact recipes + a global AGENTS.md, killing trap/duplicate tools, and cross-session memory a weak model can use (auto-inject recall + a deterministic `/remember` write). The line between a local agent that's a toy and one that's useful. |
 
 ### 🩺 Watchers, reliability & durable automation
 
