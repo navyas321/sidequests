@@ -58,6 +58,14 @@ copy-paste-correct commands so it needn't invent:
 - "Auth doesn't work" is usually the wrong surface: `gh` GraphQL subcommands + git may work
   perfectly while raw REST (`gh api user`) throws transient 503s. Tell it to use `gh repo list/view
   --json`, never `gh api <rest>`. Add "if a command errors, fix syntax and retry — don't give up."
+- **Guardrails must state the POSITIVE case, or a small model overgeneralizes them into refusals.**
+  A one-sided rule — "do NOT commit/push unless the user explicitly asks" — made the 4B refuse to
+  commit/build/open PRs *even when explicitly asked*, inventing a "user must confirm" policy that
+  existed nowhere (push/PR plumbing was fully working the whole time). Every "do NOT X unless Y"
+  needs its other half spelled out: **"when Y, DO X immediately — the user's request IS the
+  approval; never ask for extra confirmation."** Pair it with the exact flow so the steps can't be
+  fumbled: branch → edit → verify → commit → push → `gh pr create`. (Verified live: after the
+  rewrite, one natural request produced a real draft PR end-to-end with zero refusals.)
 See `RECIPES.md` for a ready-to-adapt AGENTS.md.
 
 ## 4. Cross-session memory a weak model can actually use

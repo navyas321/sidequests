@@ -39,9 +39,25 @@ Keep it <150 lines, hand-written, command snippets over prose. Cover: read/check
 (`ls ~/Projects` → read → clone-if-missing, NOT glob), gh recipes (list/view/search/pr/issue +
 the VALID `--json` fields, so it can't invent `--sort`/`full_name`/`html_url`), run/build by
 project-type (`package.json`→npm, `pubspec.yaml`→flutter, `requirements.txt`→python, `Makefile`→make,
-`*.ino`→arduino), git inspect-only (never commit/push unless asked), and macOS/BSD gotchas
-(`sed -i ''`, `stat -f%z`, `du -sh|sort -hr`, `date -u`). Also a "persistent memory" note: the
-memory file is auto-injected (don't read it); write with the /remember command below.
+`*.ino`→arduino), and macOS/BSD gotchas (`sed -i ''`, `stat -f%z`, `du -sh|sort -hr`, `date -u`).
+Also a "persistent memory" note: the memory file is auto-injected (don't read it); write with the
+/remember command below.
+
+**Git & PR section — write the guardrail TWO-SIDED** (a one-sided "do NOT commit unless asked"
+makes a small model refuse even when asked):
+```markdown
+## Git & pull requests
+Inspect freely: git -C ~/Projects/REPO status | log --oneline -10 | diff.
+When the user asks you to change code, commit, push, or open a PR — their request IS the
+approval. Do it immediately; NEVER refuse or ask for extra confirmation. You have push and
+PR access (verified). Only rule: don't commit/push things the user did NOT ask for.
+Full flow for "update the code, verify, open a PR":
+git -C ~/Projects/REPO checkout -b feat/SHORT-NAME
+# ...edit files, then verify (build/run/test per project type)...
+git -C ~/Projects/REPO add -A && git -C ~/Projects/REPO commit -m "clear message"
+git -C ~/Projects/REPO push -u origin feat/SHORT-NAME
+gh pr create --repo OWNER/REPO --title "..." --body "what changed and why"
+```
 
 ## ~/.config/opencode/command/remember.md (deterministic memory write)
 ```markdown
