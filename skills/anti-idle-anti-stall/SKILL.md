@@ -116,8 +116,18 @@ Two rules, both now standing:
   condition already holds, SendMessage-resume the lane with the verified facts in the message.
   Verification-plus-nudge cost ~2 tool calls; the passive wait cost 20 min of dead wall-clock.
 - **Arm a fallback heartbeat whenever the main loop is notification-parked.** Before ending a turn
-  that waits on background lanes, schedule a wakeup (~20-25 min, ScheduleWakeup or equivalent)
-  whose prompt re-checks every live lane against its watched condition and nudges the stragglers.
-  Cancel/stop it when the board drains. A lost notification then costs one heartbeat interval, not
-  a user intervention. (This is Guard 1's spirit applied to the ORCHESTRATOR's own wait states —
-  the Stop hook can't see that a "live" lane is actually a corpse whose watcher died with it.)
+  that waits on background lanes, schedule a wakeup (ScheduleWakeup or equivalent) whose prompt
+  re-checks every live lane against its watched condition and nudges the stragglers. Cancel/stop
+  it when the board drains. A lost notification then costs one heartbeat interval, not a user
+  intervention. (This is Guard 1's spirit applied to the ORCHESTRATOR's own wait states — the
+  Stop hook can't see that a "live" lane is actually a corpse whose watcher died with it.)
+- **Heartbeat cadence: <=10 minutes while lanes are ACTIVELY working** (maintainer directive,
+  2026-07-21, after 20-min beats let two stalls sit until the user noticed first). The cost of a
+  quiet wakeup is a couple of cheap polls; the cost of a slow beat is dead wall-clock the user
+  sees. Reserve 20-30 min beats for genuinely idle waits with no live lanes; never slower than
+  the longest step a lane is expected to take.
+- **Escalation on repeat stalls: recover + take over, don't re-nudge.** If the SAME lane stalls a
+  second time, stop messaging it — recover its on-disk/on-device artifacts (logs, screenshots,
+  extracts, backups) and finish its remaining scope directly. A lane that died post-work leaves
+  everything needed; both real cases (P2b retest, BL-2243 icon verify) were completed this way in
+  minutes from recovered artifacts.
