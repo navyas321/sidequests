@@ -100,3 +100,24 @@ Beyond the two deterministic guards, interactive multi-SESSION fleets need three
   held items to the item-reaper in one night. During long holds: bus heartbeat every 15 min for
   peers AND a one-line item comment every ~90 min for the reaper. Also: split-order partial
   dependencies — "waiting on a partial dependency is not a hold"; the unblocked 70% starts now.
+
+## Field learnings (2026-07-21 vibemis PR-integration wave — orchestrator + background subagents)
+
+The wave stalled ~20 min mid-pipeline and the user had to nudge ("why did you just stop working").
+RCA: a background subagent STOPPED with the message "CI is still building; my background watcher
+will resume me" — but a stopped subagent has NO live watcher: the moment it emits a completion
+notification, whatever `gh run watch` it thought it owned is gone with its process. The parent
+orchestrator took the claim at face value and parked on the (never-coming) second notification.
+Two rules, both now standing:
+
+- **A stopped subagent's "I'll be resumed by X" is false by default.** When any lane's completion
+  notification carries a self-parking claim instead of results, the parent must IMMEDIATELY verify
+  the watched condition itself (one cheap poll: `gh run list`, release list, log tail) and, if the
+  condition already holds, SendMessage-resume the lane with the verified facts in the message.
+  Verification-plus-nudge cost ~2 tool calls; the passive wait cost 20 min of dead wall-clock.
+- **Arm a fallback heartbeat whenever the main loop is notification-parked.** Before ending a turn
+  that waits on background lanes, schedule a wakeup (~20-25 min, ScheduleWakeup or equivalent)
+  whose prompt re-checks every live lane against its watched condition and nudges the stragglers.
+  Cancel/stop it when the board drains. A lost notification then costs one heartbeat interval, not
+  a user intervention. (This is Guard 1's spirit applied to the ORCHESTRATOR's own wait states —
+  the Stop hook can't see that a "live" lane is actually a corpse whose watcher died with it.)
