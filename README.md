@@ -86,6 +86,7 @@ Claude, or just `python` them directly.
 | --- | --- |
 | **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's genuinely missing — no duplicates. Windows + iCloud for Windows. |
 | **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) — handles live covers and un-catalogued originals that Shazam can't. |
+| **[game-walkthrough](skills/game-walkthrough/SKILL.md)** | Paste a game screenshot + game name (+ quest name) and get your exact next move — retrieved from guides and frame-read quest videos, never from model memory; grows a persistent per-game knowledge base in `kb/`. |
 
 Several skills below have a deeper walkthrough — the rest are fully documented in
 their own `SKILL.md`.
