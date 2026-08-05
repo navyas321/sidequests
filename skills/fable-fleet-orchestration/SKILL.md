@@ -41,11 +41,32 @@ prompt to paste into each. Sizing heuristics:
   deploy target), useful builder count is ~2 (one on-resource, one off-resource); extra sessions
   add coordination cost, not throughput. File-disjoint backlogs justify more.
 - **Verification isolation**: give adversarial verification its OWN session when it must not share
-  context/assumptions with the builder (it will find what the builder can't see).
+  context/assumptions with the builder (it will find what the builder can't see). The 2026-08-05
+  life-in-tabs comparison is a concrete case: every caught error crossed a context boundary;
+  independent re-execution, rather than the builder re-reading its own work, detected the errors.
 - **Coordination overhead grows with N**: each actor adds bus traffic, lease contention, and
   liveness tracking. 3-5 total is the sweet spot; beyond that, split the project instead.
 - **Revise live**: an idling tier = merge lanes or hand it queued work; a backed-up queue = ask the
   user for one more session (name the class and the kickoff prompt).
+
+### Observed role fit (2026-08-05, life-in-tabs)
+
+This is an observational day-sample, not a controlled benchmark. Use it to choose a starting
+lineup, then adjust to the actual repository, tools, and task shape:
+
+| Need | Best observed fit | Guardrail |
+|---|---|---|
+| Delegate-and-ship | Opus 4.8 | Pair handed-down plans/specs with review. |
+| Artifact verification | Opus 5 | Keep it independent from the builder's context. |
+| Plan/process review | Fable 5 | Give it the primary evidence, not only summaries. |
+| Long single-thread build | terra | Add an outside verifier before close. |
+| Lean outside review | luna | Keep it in critic/reviewer mode rather than primary authoring. |
+| Short execution | sol | Use checkpointed tasks only; avoid fragmented long lineages. |
+| Mechanical evidence gates | Haiku | Cheap close reviews (~2.5–7k tokens) were the best trust-per-token layer. |
+
+For a normal build, favor a builder plus a lean, isolated verifier over solo grind. In the same
+sample, terra + Opus 5 was both more accurate and leaner than a fragmented sol lineage. This is a
+pairing heuristic, not a claim that token counts are comparable across platforms.
 
 ## The substrate (all of it required)
 
@@ -61,6 +82,10 @@ prompt to paste into each. Sizing heuristics:
 4. **File leases** for shared files (lock files, bench docs) — bus posts do not replace leases.
 5. **Anti-idle stack** (see anti-idle-anti-stall skill + below): self-armed bus monitors before any
    park, direct session-to-session nudges as the escalation, an alert-only staleness watchdog.
+
+The backlog is the recovery bus, not a ceremonial tracker. A fragmented workhorse lineage can
+drop an announced item even when the bus has the history; require pickup/owner, durable handoff,
+and executable-close evidence so another tier can recover it.
 
 ## Coordinator duties per wave
 
