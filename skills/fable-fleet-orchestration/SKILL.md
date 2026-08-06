@@ -49,10 +49,13 @@ prompt to paste into each. Sizing heuristics:
 - **Revise live**: an idling tier = merge lanes or hand it queued work; a backed-up queue = ask the
   user for one more session (name the class and the kickoff prompt).
 
-### Observed role fit (2026-08-05, life-in-tabs)
+### Observed role fit (life-in-tabs, retained history 2026-07-11..08-05)
 
-This is an observational day-sample, not a controlled benchmark. Use it to choose a starting
-lineup, then adjust to the actual repository, tools, and task shape:
+Observational data from one host's assignment policy — **not a controlled benchmark**. 362 executed
+sessions across 9 model classes; regenerate with that repo's `scripts/model_fleet_extract.py`. The
+dominant confound is that a human chose which model got which job, so these rows partly measure the
+*job*. Sample sizes range from n=1 to n=15 driving sessions: treat anything below n≈8 as anecdote.
+Use it to pick a starting lineup, then adjust to your repo, tools, and task shape:
 
 | Need | Best observed fit | Guardrail |
 |---|---|---|
@@ -62,11 +65,38 @@ lineup, then adjust to the actual repository, tools, and task shape:
 | Long single-thread build | terra | Add an outside verifier before close. |
 | Lean outside review | luna | Keep it in critic/reviewer mode rather than primary authoring. |
 | Short execution | sol | Use checkpointed tasks only; avoid fragmented long lineages. |
-| Mechanical evidence gates | Haiku | Cheap close reviews (~2.5–7k tokens) were the best trust-per-token layer. |
+| Heavy orchestration | Opus 4.6 | Highest observed spawn rate (41 spawns / 31 child runs in one session). |
+| Mechanical evidence gates | Haiku | 52 close reviews at ~4.1k tokens each, 9.6% reject rate — best trust-per-token layer, and NOT a rubber stamp. |
 
 For a normal build, favor a builder plus a lean, isolated verifier over solo grind. In the same
 sample, terra + Opus 5 was both more accurate and leaner than a fragmented sol lineage. This is a
 pairing heuristic, not a claim that token counts are comparable across platforms.
+
+**Do not assume a platform can't delegate.** That sample's first two conclusions about Codex were
+both wrong: first "Codex has no delegation mechanism" (false — `spawn_agent`/`wait_agent` appear in
+28 of 30 rollouts), then "orchestration is overwhelmingly Claude-side" (also false — `thread_spawn_edges`
+shows 15 of 30 Codex sessions are spawned children, 50% vs Claude's 62%). Measure delegation on the
+platform's own metadata before designing around a supposed limitation.
+
+### The self-review rule (hard-won, non-negotiable)
+
+**No agent may be the last reviewer of its own work — including a fork of itself.** In that sample,
+one model ran an "adversarial review" of its own draft using a same-model subagent forked from the
+same context: it caught every *technical* defect and missed *every* scope defect, all of which
+shipped and were fixed minutes later by a different model. A reviewer inheriting the author's
+context inherits the author's blind spots.
+
+The analysis that produced these very numbers then failed the same rule: it self-certified, and an
+independent reviewer later found four P0 defects in it (tokens attributed by message count rather
+than real usage; ~100 dead transcripts counted as sessions; a whole delegation channel unmeasured;
+a red test claimed as verified). Route reviews to a *different context* — separate session,
+different model, or an agent that did not author the work — and require it to re-execute the claim
+against primary evidence rather than read the author's narration.
+
+**Prefer one well-scoped reviewer to a big fan-out.** In the same wave, a 13-agent parallel fan-out
+returned exactly one usable result (12 died on a session limit, with no partial credit), while a
+single well-briefed reviewer found all four P0s. Fan-out multiplies cost and shared failure modes;
+it does not multiply insight.
 
 ## The substrate (all of it required)
 
