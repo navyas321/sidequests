@@ -25,12 +25,13 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-26 skills, grouped by theme. Each links to its runbook; one line is the gist.
+27 skills, grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
 | Skill | What it does |
 | --- | --- |
+| **[cross-agent-review](skills/cross-agent-review/SKILL.md)** | Independently vet another agent's work or turn verified evidence into a durable session report; exposes intent mismatches, shortcuts, unsupported claims, installation drift, and likely leftover processes. |
 | **[fable-fleet-orchestration](skills/fable-fleet-orchestration/SKILL.md)** | Run a fleet of USER-VISIBLE peer sessions (a top-tier coordinator orchestrating opus/sonnet/haiku workers the user spins up) — headcount planning, tier files + kickoff prompts, bus/backlog substrate, review gates, anti-idle. The working model behind a ~20-item overnight release. |
 | **[agentic-best-practices](skills/agentic-best-practices/SKILL.md)** | A working checklist of Anthropic's current guidance for building with Claude — prompting, agent-vs-workflow design, skills/subagents/hooks/CLAUDE.md, context engineering, tool & MCP design, and reliability. |
 | **[agent-task-pickup](skills/agent-task-pickup/SKILL.md)** | Rank a shared backlog so an autonomous agent picks the RIGHT next task (severity, provenance, unblocking, quick-wins) while gating risky work to a human lane. Ships `pickup.py` + tests. |

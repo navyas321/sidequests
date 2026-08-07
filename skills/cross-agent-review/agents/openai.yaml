@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross-Agent Review"
+  short_description: "Adversarial review and session amendments"
+  default_prompt: "Use $cross-agent-review to independently audit another agent's work and write an amendment report."
