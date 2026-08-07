@@ -31,10 +31,24 @@ For video, extract frames and READ them — on-screen text, a title card, a
 streamer's name/branding, or a live chat where viewers guess the song are
 frequently the fastest answer:
 ```bash
-python ${CLAUDE_SKILL_DIR}/scripts/frames.py "<clip>" --n 6 --crop right
+VS="${CLAUDE_SKILL_DIR}/scripts/videoscan.py"
+python "$VS" frames "<clip>" --scenes --budget 6            # local file OR URL
+python "$VS" frames "<clip>" --times 12,45 --crop chat --zoom 3   # read the chat
 ```
-Then Read the saved `_frames/*.jpg`. Note any names/guesses but treat chat
-guesses as *unverified leads*, not the answer.
+`--scenes` puts the frames on the cuts (a title card or an overlay appearing
+IS a cut), and `--crop chat --zoom 3` upscales the right-hand chat column so
+small text is legible. Then Read the saved `_frames/*.jpg`. Note any
+names/guesses but treat chat guesses as *unverified leads*, not the answer.
+
+If the clip is a URL rather than a file, `videoscan.py` handles it directly —
+and `python "$VS" subs "<url>"` often ends the hunt outright: uploaders name
+the track in the description-derived captions, and the output tells you whether
+it came from authored subtitles or a speech model's guess.
+
+Other sampling modes (`analyze` for structure, `plan` for a frame budget) live
+in the **`video-understanding`** skill, which owns this script; if the
+`claude-video-vision` plugin is installed, its `video_watch` MCP tool is the
+richer path.
 
 **1. Acoustic fingerprint (works for studio originals).**
 ```bash

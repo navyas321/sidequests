@@ -1,8 +1,9 @@
 # core (always needed)
 imageio-ffmpeg
 faster-whisper
-opencv-python-headless
 numpy
+# frames/probe/captions from a video or URL (videoscan.py)
+yt-dlp
 # acoustic fingerprint
 shazamio
 pydub

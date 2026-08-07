@@ -86,6 +86,14 @@ After classifying, confirm the type at the top of your first status block.
    (run the app, the failing test, the command) and **observe the actual
    failure** — capture the error/output. If it can't be reproduced, report that
    and ask for more detail; do not proceed to a speculative fix.
+   - **If the report is a screen recording** (the common shape for UI and
+     mobile bugs), don't summarize it from the filename. Turn it into evidence:
+     `python <skills>/video-understanding/scripts/videoscan.py frames bug.mp4
+     --scenes --format png` samples on the cuts — which in a screen recording
+     are the clicks and screen transitions — then Read the stills to get the
+     exact steps, the exact error text, and the timestamp it appeared. `--crop`
+     + `--zoom` makes a small toast or stack trace legible. Cite the timestamp
+     in the repro. See the `video-understanding` skill.
 2. **Locate the root cause.** Use `Grep`/`Glob`/`Read` to trace from symptom to
    cause. For a large/unknown area, spawn an `Explore` subagent via `Task`.
    If the repo ships a local context/recall engine (e.g. life-in-tabs:

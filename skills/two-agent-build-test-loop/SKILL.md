@@ -79,7 +79,14 @@ tiers:
 - **Negative** — degrades cleanly when the precondition is missing (host offline, setting off).
 
 Prefer **log-grep assertions** over eyeballing: run the artifact for a bounded `timeout`, grep the
-log for the expected signal, quote the 2–3 lines that answer the question. Tests are the oracle — a
+log for the expected signal, quote the 2–3 lines that answer the question.
+
+When the behavior only exists on screen (an overlay, a stream, a device UI) the tester's screen
+recording is the artifact — but "I watched it, looks right" is not a scorecard entry. Convert it:
+`python <skills>/video-understanding/scripts/videoscan.py frames run.mp4 --scenes --format png`,
+Read the stills, and cite `HH:MM:SS + what the frame shows` as the evidence line. `analyze
+--filters freeze,black` also catches the two failures a human eye glosses over — a frozen render
+and a dropped signal — with timestamps. See the `video-understanding` skill. Tests are the oracle — a
 model's self-judgment degrades as context fills, but a green build / a command scorecard stays
 accurate. The report surfaces *signal*, not raw logs (a TL;DR table → per-tier results →
 recommendation, with ≤10–20-line excerpts).

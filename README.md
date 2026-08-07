@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
-![skills](https://img.shields.io/badge/skills-25-2ea043)
+![skills](https://img.shields.io/badge/skills-27-2ea043)
 
 What started as two one-off migrations (Google Photos → iCloud de-dupe, and
 song/source identification from a clip) has grown into a catalog of runbooks
@@ -25,7 +25,7 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-25 skills, grouped by theme. Each links to its runbook; one line is the gist.
+27 skills, grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
@@ -84,6 +84,7 @@ Claude, or just `python` them directly.
 
 | Skill | What it does |
 | --- | --- |
+| **[video-understanding](skills/video-understanding/SKILL.md)** | Give the agent eyes on a video (file or URL): probe it, find its structure (scene cuts, black, freeze, silence), spend a frame budget where the picture changes, read the stills, and pull captions with their provenance labeled. Pairs with the [claude-video-vision](https://github.com/jordanrendric/claude-video-vision) plugin; the bundled `videoscan.py` is the no-Node, no-ffprobe fallback. |
 | **[photo-reconciler](skills/photo-reconciler/SKILL.md)** | Reconcile a Google Photos export against iCloud and upload only what's genuinely missing — no duplicates. Windows + iCloud for Windows. |
 | **[source-finder](skills/source-finder/SKILL.md)** | Identify the song/media playing in a video or audio clip and return the source (artist + title + link) — handles live covers and un-catalogued originals that Shazam can't. |
 | **[game-walkthrough](skills/game-walkthrough/SKILL.md)** | Paste a game screenshot + game name (+ quest name) and get your exact next move — retrieved from guides and frame-read quest videos, never from model memory; grows a persistent per-game knowledge base in `kb/`. |
@@ -97,7 +98,9 @@ their own `SKILL.md`.
 
 - **Python 3.10+**
 - Each tool has its own `requirements.txt`. `ffmpeg` is bundled via
-  `imageio-ffmpeg`, so there's **no system ffmpeg install** to worry about.
+  `imageio-ffmpeg`, so there's **no system ffmpeg install** to worry about
+  (and nothing here needs `ffprobe`). `yt-dlp` is only needed to point the
+  video tooling at a URL instead of a local file.
 - `session-context` only needs `git` (and optionally `gh` for the PR list).
 - `source-finder` is cross-platform. `photo-reconciler`'s staging/dehydration
   bits are Windows + "iCloud for Windows"; its hashing core is portable.
@@ -174,6 +177,52 @@ bash skills/session-context/scripts/snapshot.sh /path/to/myrepo
 
 ---
 
+## 🎬 video-understanding
+
+A video can't be read, only sampled — and every bad answer about one comes from
+sampling badly, then reasoning confidently about frames you never looked at.
+This skill samples *deliberately*: find the structure first, then spend the
+frame budget where the picture actually changes.
+
+**With Claude:** share a video or a YouTube link and ask what happens in it.
+
+**Standalone:**
+
+```bash
+pip install -r skills/video-understanding/requirements.txt
+VS=skills/video-understanding/scripts/videoscan.py
+
+python $VS probe   clip.mp4                    # duration, res, fps, audio (no ffprobe needed)
+python $VS analyze clip.mp4 --filters scene,black,freeze,silence,motion
+python $VS plan    clip.mp4 --budget 9         # timestamps worth reading
+python $VS frames  clip.mp4 --scenes --budget 9        # -> _frames/*.jpg + frames.json
+python $VS frames  "https://youtu.be/ID" --times 412 --crop hud --zoom 3
+python $VS subs    "https://youtu.be/ID"       # captions, labeled manual vs auto
+```
+
+URLs are **stream-seeked** through yt-dlp — nine frames from a 75-minute video
+cost seconds, not a 700 MB download. Then you `Read` the stills: that's the
+perception step, and the only one that yields evidence you can cite by
+timestamp.
+
+Verify the toolchain on a new machine — it builds a synthetic clip with known
+cuts and asserts they're found:
+
+```bash
+python skills/video-understanding/scripts/selftest.py
+python skills/video-understanding/scripts/selftest.py --url "https://youtu.be/jNQXAC9IVRw"
+```
+
+If you have Node 20+ and a real `ffmpeg`/`ffprobe` on PATH, install
+[**claude-video-vision**](https://github.com/jordanrendric/claude-video-vision)
+too — its `video_watch` / `video_analyze` / `video_detail` MCP tools return
+frames inline and add real audio understanding (Gemini / local Whisper /
+OpenAI). The skill uses it when present and falls back to `videoscan.py`
+when it isn't. `game-walkthrough`, `source-finder`, `bugfix` and
+`two-agent-build-test-loop` all route their video work through this method.
+
+---
+
 ## 🎵 source-finder
 
 Give it a clip and it identifies what's playing. Acoustic fingerprinting (Shazam)
@@ -190,7 +239,7 @@ auto-triggers), or run `/source-finder <clip>`.
 SF=skills/source-finder/scripts
 
 # 0. read on-screen clues (titles, branding, a chat guessing the song)
-python $SF/frames.py clip.mov --n 6 --crop right     # then look at _frames/*.jpg
+python $SF/videoscan.py frames clip.mov --scenes --budget 6   # then look at _frames/*.jpg
 
 # 1. acoustic fingerprint (studio originals)
 python $SF/extract_audio.py clip.mov -o audio.wav --stereo
@@ -441,7 +490,9 @@ discoverable; many skills also ship a stdlib reference implementation you can ru
 standalone — e.g. `agent-coordination-gates/coord.py` + `gates.py`,
 `agent-task-pickup/pickup.py` (+ tests), `context-engine/scripts/context_engine.py`
 (BM25 + optional LSA hybrid), `usage-limit-guard/scripts/` (`token_burn.py`,
-`detect_limit.py`), `source-finder/scripts/` (audio/fingerprint/transcribe),
+`detect_limit.py`), `video-understanding/scripts/videoscan.py` (+ `selftest.py`;
+`game-walkthrough` and `source-finder` ship byte-identical copies, kept honest by
+`checksync.py`), `source-finder/scripts/` (audio/fingerprint/transcribe),
 `photo-reconciler/scripts/reconcile.py`, and `watcher-reliability/watcher-preflight.ps1`.
 
 ## Updating

@@ -75,14 +75,28 @@ screen are ground truth:
 
 ```bash
 pip install -r ${CLAUDE_SKILL_DIR}/requirements.txt   # once
-python ${CLAUDE_SKILL_DIR}/scripts/vidframes.py "<youtube-url>" --auto 9
+VS="${CLAUDE_SKILL_DIR}/scripts/videoscan.py"
+
+python "$VS" probe  "<youtube-url>"              # confirm it's the right video
+python "$VS" frames "<youtube-url>" --scenes --budget 9
 ```
 
-This stream-seeks (no full download) and saves `_gwframes/f_<sec>.jpg`.
-Read every frame image. Map the objective-banner text and area titles across
-timestamps → that IS the quest's step sequence. Sample finer (`--times
-15,40,65,...`) around transitions you care about (quest start, area changes).
-Dialogue frames carry story beats; menu frames carry unlocks/rewards.
+`--scenes` finds the cuts first and samples just after each one, so the frame
+budget lands on area transitions, cutscene starts and menu opens instead of on
+nine identical shots of a corridor. It stream-seeks (no download) and saves
+`_frames/f_<centiseconds>.jpg` plus a `frames.json` timestamp map.
+
+Read every frame. Map the objective-banner text and area titles across
+timestamps → that IS the quest's step sequence. Go back finer around a
+transition you care about (`--times 15,40,65`), and when the banner is small,
+crop and upscale it: `--crop hud --zoom 3`. Dialogue frames carry story beats;
+menu frames carry unlocks/rewards.
+
+Fuller method, other sampling modes, and the audio/caption ladder:
+the **`video-understanding`** skill (it owns `videoscan.py`; this copy is
+kept byte-identical). If the `claude-video-vision` plugin is installed, its
+`video_watch` / `video_detail` MCP tools do the same job with inline frames —
+use them and keep the rules above.
 
 ### 4. Answer
 - **Lock line:** which exact game + quest you resolved (edition-precise).
@@ -115,6 +129,9 @@ the next one cheaper.
 - `yt-dlp` + `imageio-ffmpeg` (bundled ffmpeg binary, no system install) —
   see `requirements.txt`. Frame extraction streams via HTTP range requests;
   ~9 frames across a 75-min video costs seconds, not a 700 MB download.
+- `python scripts/videoscan.py analyze <url> --start 300 --duration 120` when
+  you need to know where a long video's chapters actually break. Analyzing a
+  whole URL streams the whole file — bound it.
 - If a browser pane is available you can seek the video visually instead;
   the script path works headless.
-- Clean up `_gwframes/` in the scratch dir when done.
+- Clean up `_frames/` in the scratch dir when done.

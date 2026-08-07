@@ -1,0 +1,4 @@
+# ffmpeg binary, bundled - no system install, no ffprobe needed
+imageio-ffmpeg>=0.5
+# URLs (YouTube etc): direct stream URL + captions. Not needed for local files.
+yt-dlp>=2025.1.1
