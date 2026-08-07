@@ -25,7 +25,7 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-27 skills, grouped by theme. Each links to its runbook; one line is the gist.
+26 skills, grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
@@ -37,7 +37,6 @@ Claude, or just `python` them directly.
 | **[agent-coordination-gates](skills/agent-coordination-gates/SKILL.md)** | Let a fleet of agents share ONE backlog without collisions — enforce the create/pickup/pause/close lifecycle at the data layer, plus a file-lease + bulletin bus. Ships `coord.py` + `gates.py`. |
 | **[anti-idle-anti-stall](skills/anti-idle-anti-stall/SKILL.md)** | Deterministic guards + orchestrator discipline that keep an agent fleet draining and never idling — a Stop hook that blocks parking while work remains, a stall-reaper that frees a stalled shield-holder's leases, and field-proven lane rules: a stopped subagent's "my watcher will resume me" is false by default (verify + nudge), take over a twice-stalled lane from its recovered artifacts, and run fallback heartbeats at ≤10 min while lanes are actively working. |
 | **[two-agent-build-test-loop](skills/two-agent-build-test-loop/SKILL.md)** | An autonomous SDLC where a BUILD agent self-verifies and ships a test-ready artifact, and a TEST agent on REAL target hardware runs a command-level scorecard and opens a report PR — the git handoff is the loop. Captures the branch/CI-tier/release conventions + the stale-alpha, merge-fusion, and device-gated traps. |
-| **[local-coding-agent](skills/local-coding-agent/SKILL.md)** | Make a small LOCAL coding model (opencode + Ollama, 4B on ~8 GB) genuinely competent instead of "useless" — model choice on tight RAM, the config that stops it denying its own tools, teaching correct tool use via exact recipes + a global AGENTS.md, killing trap/duplicate tools, two-sided guardrails (one-sided "do NOT commit unless asked" makes it refuse even when asked — "the request IS the approval" + the branch→verify→commit→push→`gh pr create` flow), and cross-session memory a weak model can use (auto-inject recall + a deterministic `/remember` write). The line between a local agent that's a toy and one that's useful. |
 
 ### 🩺 Watchers, reliability & durable automation
 
