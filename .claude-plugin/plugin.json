@@ -1,7 +1,7 @@
 {
   "name": "sidequests",
   "description": "An open-source sink of reusable, project-agnostic agent-ops tooling + Claude Code skills, born as side quests. 27 skills across agent orchestration & multi-agent coordination (fable-fleet-orchestration, agent-task-pickup, agent-coordination-gates, anti-idle-anti-stall, two-agent-build-test-loop, agentic-best-practices), watchers & durable automation (watcher-reliability, watcher-cleanup, durable-claude-automation), agile-scrum SDLC (feature, bugfix, releasing, receipts, cross-agent-review), context & memory (session-context, memory-compaction, context-engine), usage & cost control (usage-limit-guard, github-actions-cost-control), gaming rig & desktop (steam-shortcut, hdr-gaming-setup, display-off-shortcut, isolated-streaming-host-mock), and media perception & migration (video-understanding, source-finder, game-walkthrough, photo-reconciler).",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "author": { "name": "navyas321" },
   "homepage": "https://github.com/navyas321/sidequests",
   "repository": "https://github.com/navyas321/sidequests",
