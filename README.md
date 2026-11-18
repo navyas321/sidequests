@@ -56,6 +56,7 @@ Claude, or just `python` them directly.
 | **[bugfix](skills/bugfix/SKILL.md)** | Drive a bug to a verified fix via a lightweight scrum loop — reproduce, fix the root cause, add a regression test, verify green, release. |
 | **[releasing](skills/releasing/SKILL.md)** | Cut clean releases the right way — continuous-beta / tag-cut-stable: bump beta, generate a changelog from git, and (on request) tag an annotated stable. |
 | **[receipts](skills/receipts/SKILL.md)** | Unbiased "show me the receipts" audit — an independent sub-agent checks every instruction from a time window against what actually shipped (git/backlog/code) and files a ticket per miss. |
+| **[backlog-hygiene](skills/backlog-hygiene/SKILL.md)** | Spring-clean a shared agent backlog so its states tell the truth: close only what is verifiably done, empty the "paused" parking lot, turn fake "risk accepted" items into honest wontfix/open, recover orphans, re-check stale blockers, split follow-ups before closing — then fix what made the pile. Ships a read-only `triage_report.py` + tests. |
 
 ### 🧠 Context, memory & continuity
 
