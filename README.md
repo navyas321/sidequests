@@ -57,6 +57,7 @@ Claude, or just `python` them directly.
 | **[releasing](skills/releasing/SKILL.md)** | Cut clean releases the right way — continuous-beta / tag-cut-stable: bump beta, generate a changelog from git, and (on request) tag an annotated stable. |
 | **[receipts](skills/receipts/SKILL.md)** | Unbiased "show me the receipts" audit — an independent sub-agent checks every instruction from a time window against what actually shipped (git/backlog/code) and files a ticket per miss. |
 | **[backlog-hygiene](skills/backlog-hygiene/SKILL.md)** | Spring-clean a shared agent backlog so its states tell the truth: close only what is verifiably done, empty the "paused" parking lot, turn fake "risk accepted" items into honest wontfix/open, recover orphans, re-check stale blockers, split follow-ups before closing — then fix what made the pile. Ships a read-only `triage_report.py` + tests. |
+| **[ui-copy-trim](skills/ui-copy-trim/SKILL.md)** | Cut verbose UI helper text (subtitles, captions, hints, status lines) to a few words: a stdlib scanner finds candidates, a short rewrite rule keeps the outcome and drops the mechanism, content and opt-in detail stay, then a phone-width render check in both themes. Ships `copy_scan.py` + tests. |
 
 ### 🧠 Context, memory & continuity
 
