@@ -7,8 +7,10 @@ description: >-
   (→ in-progress) requires a named OWNER; pausing (leaving in-progress without finishing) requires a
   progress+why+validation handoff; closing (any terminal state) requires a resolution + HOW-it-was-verified.
   Use when building a multi-agent/autodev/backlog-watcher system, when agents double-pick or silently drop
-  or clobber each other's files, or when you can't tell WHO did WHAT or whether "done" was real. Reference
-  impl included: coord.py (leases + bus, stdlib) + gates.py (the four lifecycle gates, framework-agnostic).
+  or clobber each other's files, when you can't tell WHO did WHAT or whether "done" was real, or when agent
+  closes are slipping past the reviewer by looking like the human (e.g. PowerShell's Mozilla User-Agent).
+  Reference impl included: coord.py (leases + bus, stdlib) + gates.py (the lifecycle gates, an optional
+  server-owned reviewer hook, and a human-vs-agent User-Agent classifier; framework-agnostic).
 ---
 
 # Agent coordination gates: enforce the work lifecycle + a lease bus
@@ -30,12 +32,39 @@ call) and reject any transition that lacks its coordinating metadata. Four gates
 | **create** | a tracked item exists (title + type/priority) | nothing actionable is ever lost or done off-book |
 | **pickup** (→ `inprogress`) | `owner` (≥2 chars) | others see who holds it → no double-pick |
 | **pause** (`inprogress` → open/blocked/paused) | `owner` + progress note (WHY paused + what's done) + a validation keyword | the next agent resumes cleanly instead of redoing it |
-| **close** (any terminal: done/wontfix/duplicate/deferred…) | `resolution` (≥40 chars, WHY + steps) + a verification keyword (`verif|test|smoke|curl|render|confirm|checked|passed|/api/…`) | "done" always carries proof; no silent/one-word closes |
+| **close → done/shipped** | `resolution` (≥40 chars, WHY + steps) + a verification keyword (`verif|test|smoke|curl|render|confirm|checked|passed|/api/…`) | "done" always carries proof; no silent/one-word closes |
+| **close → any DISPOSAL state** (`wontfix`/`canceled`/`duplicate`/`deferred`) | the done-close requirements **PLUS an independent review** of the drop | disposal is where work gets *quietly dropped*; force a skeptic to justify NOT doing it — wontfix/cancel "did you exhaust it?", deferred "genuinely blocked or avoiding buildable work?", **duplicate "REALLY the same item, or distinct work dropped under a dup label? — name the canonical id"** |
+| **human-only states** (default `accepted` = "risk accepted") | the caller is the human on the board | an agent that can write "risk accepted" parks inconvenient work there; most of such a pile turns out not to be a risk at all |
 
 Each gate also **appends a dated comment** to the item (picked-up / paused / closed-as-X) so the item's
 timeline is a self-documenting audit trail. The gate lives at the API/schema layer so **no caller** — UI,
 autopilot, /loop, a human — can bypass it. (See `gates.py` for a framework-agnostic implementation you can
 drop behind any endpoint or MCP tool; wire your own storage in the two TODO hooks.)
+
+### The review must be server-owned, and "the human" must be classified properly
+
+Two holes that let agent closes skip review in production — check both in any deployment:
+
+- **A typed review token is not a review.** The minimal gate accepts a resolution containing
+  `adversarial` as proof of review — but the author can write that word without any review
+  happening, and a fork of the author's own context reviewing its own work inherits its blind
+  spots. The robust form: the write path itself spawns the reviewer (a fresh model call, a second
+  vendor's CLI, or a human queue — never the author's context), and stamps a **server-owned**
+  `reviewedBy` field the caller cannot set. `gates.apply_update(..., reviewer=fn)` does exactly
+  this; the regex token stays only as the fallback when no reviewer is wired. If the reviewer is
+  unavailable, `done` proceeds with an `auditFlag`; **disposals fail closed**.
+- **"Starts with Mozilla" is not "is a human".** Gates usually exempt the human on the board (a
+  human disposition needs no reviewer) and key that off the request User-Agent. Windows PowerShell's
+  `Invoke-RestMethod` / `Invoke-WebRequest` send `Mozilla/5.0 (Windows NT; …) WindowsPowerShell/5.1…`,
+  so with a bare `ua.startswith("Mozilla")` test, **every agent on Windows that calls the API from
+  PowerShell is booked as the human** — closes go through in seconds with no review stamp. Fix:
+  browser = Mozilla prefix **AND** no scripted-client token (`powershell`, `headlesschrome`, `curl/`,
+  `python`, `node-fetch`, `okhttp`, …) — `gates.is_human_ua()`. Put it in **one** shared classifier,
+  call it from every human-only rule, and add a regression test that fails if any module tests the
+  `mozilla` prefix itself. Document the limit honestly: a UA is self-declared, so a script that sends
+  a full browser UA still passes — this stops honest scripted clients, not deliberate impersonation.
+  Agents (and audit sub-agents filing tickets) should send an explicit non-browser UA such as
+  `my-agent/1.0`; after a close, check the item carries the reviewer's stamp.
 
 ## 2. A file/resource-lease + bulletin bus (`coord.py`)
 
@@ -71,11 +100,12 @@ queue with no double-picks, no silent drops, no clobbering, and a verifiable tra
 
 ## Files
 - `coord.py` — the lease + bus CLI/library (stdlib; run `python coord.py --help`).
-- `gates.py` — the four lifecycle gates as a framework-agnostic `apply_update(item, patch)` (wire storage).
+- `gates.py` — the lifecycle gates as a framework-agnostic `apply_update(item, patch, reviewer=, actor_is_human=)`
+  (wire storage), plus `is_human_ua(ua)`. `python gates.py` runs a self-demo of every gate.
 - Adapt the verification-keyword regex + TTLs to your project; keep the "one enforced write path" rule.
 
 
-## Field-tested improvements (life-in-tabs, 2026-07-05, BL-1042 adversarial process review)
+## Field-tested improvements (2026-07, from an adversarial process review of a production fleet)
 Three fixes that removed the biggest frictions in a ~30-review-cycle production session; port them into any
 deployment of these gates:
 1. **Reviewer context + prior-rejection feedback.** Independent close-reviewers judging only title+detail+
@@ -89,21 +119,21 @@ deployment of these gates:
 3. **Auto run-file at pickup.** If your edit-gate requires live bookkeeping (in-progress item + fresh run
    file), CREATE the run file server-side inside the pickup mutation and auto-complete it on terminal
    close. Hand-written bookkeeping lags reality and produces false gate denials (~5 in one session).
-4. **Parallelize the EXECUTION, not just the plan (2026-07-06, BL-1087).** A worktree-fleet design
+4. **Parallelize the EXECUTION, not just the plan (2026-07-06).** A worktree-fleet design
    easily ships with a planner that builds file-disjoint parallel batches and an executor that quietly
    runs them serially — the throughput loss is invisible because everything still completes. Wire the
    wave through a thread pool (each unit already isolated in its own worktree/branch), serialize ONLY
    the shared-git-state steps (worktree add/registry on a lock; merges on the git lease), and prove it
    with a time-scaled test asserting wall-clock ≈ max(items), not sum.
-5. **Group small items per sub-session (2026-07-06, BL-1077).** Every headless spawn re-pays the full
+5. **Group small items per sub-session (2026-07-06).** Every headless spawn re-pays the full
    context load (~10-15k tokens of project docs + prompt). Batch file-disjoint SMALL items (task/spike,
    low/medium priority) up to ~3 per sub-session — one context load, several items, one merge; grouped
    failures must reopen EVERY member. Keep bugs/features/criticals per-item.
-6. **Wait on process exit, never pipe EOF (2026-07-06, BL-1090, Windows).** A headless child that spawns
+6. **Wait on process exit, never pipe EOF (2026-07-06, Windows).** A headless child that spawns
    its own children (agents, MCP servers) leaks inherited pipe write-handles; `communicate()` then blocks
    until the grandchildren exit — the fleet "idles waiting for other agents" and misclassifies finished
    runs as timeouts. Feed stdin + drain stdout/stderr on daemon threads and block only in `p.wait()`.
-7. **Don't let the close-gate over-tighten into a lockout (2026-07-07, BL-1230).** The mirror hazard of
+7. **Don't let the close-gate over-tighten into a lockout (2026-07-07).** The mirror hazard of
    gate #close: stacking anti-lazy-close layers (adversarial LLM reviewer on every terminal transition +
    an N-reject "route to human" cap) eventually rejects LEGIT, evidence-backed closes and then PERMANENTLY
    locks them — an agent literally cannot close its own real work ("you should be able to close your own
@@ -114,7 +144,7 @@ deployment of these gates:
    lazy-DROP class the gate exists for). Principle: gate on EVIDENCE, not on an LLM's subjective
    re-litigation, and make over-rejection auditable + reversible — never a permanent lockout.
 
-## Field learnings (2026-07-14 hearth-forge wave)
+## Field learnings (2026-07-14 overnight fleet wave)
 
 - **Check every bus-post response**: a length-limited bulletin (500 chars) SILENTLY rejects long
   posts — two coordinator orders bounced unnoticed until the response was checked. Long content

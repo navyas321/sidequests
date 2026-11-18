@@ -1,11 +1,36 @@
 ---
 name: cross-agent-review
-description: "Adversarially cross-check another agent's completed or in-progress work against user intent and primary evidence. Use when asked to vet an agent, audit a session report or handoff, check whether work took shortcuts, find unsupported claims or lingering processes, prepare an amendment report, produce a factual session report from verified artifacts, or spawn a genuinely independent reviewer in another vendor's CLI (Codex) so it cannot inherit the author's blind spots. Supports two roles: independent reviewer and session reporter."
+description: "Adversarially cross-check another agent's completed or in-progress work against user intent and primary evidence. Use when asked to vet an agent, audit a session report or handoff, check whether work took shortcuts, find unsupported claims or lingering processes, prepare an amendment report, produce a factual session report from verified artifacts, check whether a claimed "independent review" really happened, or spawn a genuinely independent reviewer in another vendor's CLI (Codex) so it cannot inherit the author's blind spots. Supports two roles: independent reviewer and session reporter."
 ---
 
 # Cross-Agent Review
 
 Treat the agent's summary as a hypothesis, never as evidence. Preserve unrelated user work and perform read-only inspection unless the user separately authorizes a change.
+
+## Ground rules
+
+- **No agent is the last reviewer of its own work.** Self-review is structurally blind, not
+  occasionally sloppy. In one audited window every defect was caught across a context
+  boundary and none inside it: a reviewer forked from the author's own context caught every
+  *technical* defect and missed every *scope* defect, and the author's own report, which it
+  had "verified", was wrong in four places that one outside reviewer found in a single pass.
+  The reviewer must be a different context: a separate session, a different model or vendor,
+  or a subagent that did not author the work and is not a fork of it.
+- **A review stamp the author wrote is a claim, not a review.** A resolution reading
+  `adversarial-reviewed: APPROVE`, a `reviewed: yes` field the caller can set, or "an
+  independent agent checked this" in a summary proves nothing by itself. Look for the
+  artifact: the reviewer's findings file or transcript, a stamp only the server can write,
+  timestamps showing the review ran after the change. Check *how* the work was closed, too:
+  a close sent through a client the tracker misclassified as the human (for example
+  PowerShell, whose default User-Agent starts with `Mozilla`) can skip a server-side
+  reviewer entirely while looking normal.
+- **Never accept "I verified it" — from the author or from yourself.** Ask which command ran
+  and whether it *could* have caught the defect class (a smoke run that executes no unit
+  tests cannot prove the unit tests pass).
+- **One well-scoped reviewer beats a fan-out.** A single focused reviewer is cheaper and
+  usually finds more than many shallow parallel ones.
+- **Cross-check the reviewer.** Reviewers can audit a superseded build or misread evidence.
+  Verify a finding against primary evidence before acting on it.
 
 ## Choose a role
 

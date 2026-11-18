@@ -46,16 +46,22 @@ that trusts only the repo, not your summaries.
    >    the actual source (read the code — confirm it's really there and correct, not just
    >    claimed; note if verified). Status ∈ {DONE-VERIFIED, PARTIAL-OR-BROKEN, MISSED,
    >    DONE-BUT-UNTRACKED, DEFERRED-OK, NEEDS-USER}.
-   > 3. Be adversarial on anything claimed fixed — quote the code.
+   > 3. Be adversarial on anything claimed fixed — quote the code. A claimed review is not
+   >    evidence either: an item whose resolution says "adversarial-reviewed" but carries no
+   >    reviewer artifact (findings file, server-owned review stamp) counts as unreviewed.
    > 4. FILE A BACKLOG TASK for EVERY finding that is MISSED, PARTIAL-OR-BROKEN, or
    >    DONE-BUT-UNTRACKED — do NOT just report it. DEDUPE first (grep the tracker so you don't
    >    double-file an existing item). Use the project's capture path
-   >    (<CAPTURE — e.g. POST http://127.0.0.1:8766/api/capture with header 'X-Ask-Claude: 1'
-   >    and JSON {title,type,priority} — NOTE the field is `title`, NOT `text` (a bare `text` 400s);
-   >    if that fails, append to data/backlog.json under the
-   >    data/bl-id.lock file lock>). One ticket per finding: type (bug/feature/task), priority,
-   >    and a detail naming the file + the smallest fix. Record each new ticket id beside its
-   >    finding. Leave DONE-VERIFIED and DEFERRED-OK items alone.
+   >    (<CAPTURE — e.g. POST http://127.0.0.1:<port>/api/capture with the project's CSRF
+   >    header and JSON {title,type,priority} — check the field names first (a capture API that
+   >    wants `title` may reject a bare `text`); if that fails, append to the tracker file under
+   >    its lock>). Send every tracker call with an explicit NON-browser User-Agent (for example
+   >    `receipts-auditor/1.0`), never bare PowerShell Invoke-RestMethod: its default UA starts
+   >    with "Mozilla" and a tracker that keys "is this the human?" off that prefix would book
+   >    your filings as the user's own. Read each new ticket back to confirm it landed with the
+   >    fields you sent. One ticket per finding: type (bug/feature/task), priority, and a detail
+   >    naming the file + the smallest fix. Record each new ticket id beside its finding. Leave
+   >    DONE-VERIFIED and DEFERRED-OK items alone.
    > 5. Write a report to <REPORT_PATH>: counts by status; a numbered list (quote, status,
    >    evidence, WHAT's missing + smallest fix, and the ticket id you filed); a prioritized
    >    MUST-FIX list on top.
@@ -80,6 +86,8 @@ the LOCKED capture API when filing so you don't clobber it; note any ticket it c
   hook) over intent. (See the scrum skill's terminal-state enforcement.)
 - **Skepticism is the product.** An auditor that agrees with you is worthless; reward the one
   that finds the dropped ask.
+- **The auditor is never the author.** Run it in a fresh context (or another model/vendor) —
+  never a fork of the session being audited. See `cross-agent-review` for the ground rules.
 
 ## Origin
 Born 2026-06-30 on life-in-tabs after a rapid phone live-review where several asks (Face ID
