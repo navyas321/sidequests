@@ -6,10 +6,11 @@ description: >-
   reliably: "my scheduled task stopped firing", "the cron/watcher died over the
   weekend", "automation broke after an app update", "run claude headless on a
   schedule", "keep the Claude app alive", "remote session keeps disconnecting",
-  or any unattended Claude run on Windows that must not depend on a long-lived
-  in-app session.
+  "claude -p stopped working", "Claude Code CLI not found", "my background
+  cache/inbox has been stale for weeks", or any unattended Claude run on Windows
+  that must not depend on a long-lived in-app session.
 allowed-tools: Bash, Read, Write, PowerShell
-argument-hint: "[headless-task|watchdog|diagnose]"
+argument-hint: "[headless-task|watchdog|diagnose|resolve-cli]"
 ---
 
 # Durable Claude automation (Windows)
@@ -40,8 +41,11 @@ crashes, restoring remote-session reachability.
 
 ## Prerequisites (verify first)
 
-1. `claude --version` works from PowerShell (the desktop app ships a CLI shim,
-   typically `…\AppData\Local\Microsoft\WindowsApps\claude.cmd`).
+1. The CLI you will launch is the **real executable**, and it works:
+   `& "$env:USERPROFILE\.local\bin\claude.exe" --version` and
+   `... auth status` (free, no model call; JSON with `loggedIn`). Prefer the
+   native installer's `~\.local\bin\claude.exe` over any `claude.cmd` wrapper on
+   PATH — see **Flow E** for why a wrapper can exist and still be broken.
 2. The MCP connector you need is a **user-scoped** server added via
    `claude mcp add` (these load in headless `claude -p`; app-only claude.ai
    connectors may not). Verify:
@@ -125,6 +129,74 @@ prevents real idling — and the rules that prevent *perceived* idling:
      the transcript is what the human watches.
   4. Belt-and-braces: have the host watchdog alert (not kill) when a
      goal-driving actor goes silent >30 min while open work remains.
+  5. **A user "pause to save credits" request does not disarm the `/goal` Stop
+     hook by itself** (see `usage-limit-guard` Flow 0). If the goal's completion
+     condition isn't fully met, the Stop hook re-fires on every turn end no
+     matter what you reply, and each forced retry is a full priced completion —
+     worst case a prompt-cache miss (e.g. a model switch) makes EVERY retry
+     reprocess the whole context (one observed case: ~500k cache-creation tokens
+     for a one-line "Paused" reply). Saying "paused" repeatedly does NOT stop the
+     drain; only satisfying or cancelling the goal (or closing the session) does.
+
+## Flow E — resolve the CLI you launch, and notice when it breaks
+
+**The trap.** A `claude.cmd` wrapper on PATH (for example in
+`%LOCALAPPDATA%\Microsoft\WindowsApps`) that locates a CLI bundled *inside the
+desktop app's package* works until an app update moves or drops that bundle.
+Then the wrapper prints `Claude Code CLI not found` and exits 1 — but the
+wrapper file still exists, so `Test-Path` and `Get-Command claude` both say all
+is well. In one deployment every headless `claude -p` spawn (inbox digest,
+contact refresh, the backlog close-reviewer, a wallet extractor) failed this way
+for **months**; nothing alerted because each feature swallowed its spawn error
+and kept serving its last good cache.
+
+**The fix — one resolver, used by every spawn site:**
+
+1. An explicit override env var (each caller names the ones it honors, e.g.
+   `CLAUDE_CLI`), when set and non-blank.
+2. The native installer's executable: `~/.local/bin/claude.exe` on Windows,
+   `~/.local/bin/claude` elsewhere.
+3. `claude` on PATH.
+4. The legacy wrapper/shim — **last resort only**, kept so a machine that only
+   has the app's bundled CLI still works.
+
+```python
+import os, shutil
+NATIVE = os.path.join(os.path.expanduser("~"), ".local", "bin",
+                      "claude.exe" if os.name == "nt" else "claude")
+def resolve_claude_cli(*env_names):
+    for name in env_names:
+        val = (os.environ.get(name) or "").strip()
+        if val:
+            return val
+    if os.path.exists(NATIVE):
+        return NATIVE
+    return shutil.which("claude") or "claude"   # PATHEXT-aware: may return a .cmd wrapper
+def claude_cmd(*env_names):
+    exe = resolve_claude_cli(*env_names)
+    # a real .exe runs directly; only a .cmd/.bat wrapper needs cmd /c
+    if exe.lower().endswith((".cmd", ".bat")):
+        return [os.environ.get("COMSPEC", "cmd.exe"), "/c", exe]
+    return [exe]
+```
+
+`scripts/run-headless.ps1` and `watcher-reliability`'s preflight resolve in the
+same order. Then make it stick:
+
+- **Every launcher reads the resolver** — no module keeps its own hard-coded
+  path. Add a regression test that greps the codebase and fails if any file
+  other than the resolver names the shim path on its own.
+- **Verify through the exact path the spawner uses**, cheapest first:
+  `--version` (proves the binary runs), `auth status` (free; parse only the
+  `loggedIn` field — the same JSON carries the account email and org, so never
+  log it whole), then **one** real tiny `claude -p` spawn.
+- **Logged out is not a failure to retry.** When `auth status` says
+  `loggedIn: false`, queue the work, don't spend a retry, re-probe cheaply on the
+  next sweep, and tell the human to run `claude auth login` once.
+- **Detect by staleness, not by error.** Put an age check on what the spawns
+  *produce* (a cache's `updatedAt`, a digest file's mtime): older than ~3x its
+  schedule means the producer is broken, whatever its logs say. This is the
+  signal that would have caught the months-long outage on day one.
 
 ## Notes & limits
 
@@ -138,7 +210,6 @@ prevents real idling — and the rules that prevent *perceived* idling:
   prompt-level guard (idempotency, circuit breaker). Test read-only first.
 
 
-<!-- lesson:hard-stop-1200et-2026-07-07 -->
 ## Lesson (2026-07-07): exact-wall-clock hard stop
 To stop a running agent session at an EXACT time (e.g. noon ET, and *only* then), register a Windows
 Scheduled Task `schtasks /Create /SC ONCE /SD <date> /ST <HH:MM>` that runs a **pure-stdlib** Python
@@ -148,4 +219,4 @@ embed them as literal strings the script writes verbatim; keep it idempotent. A 
 cancel a live session's ScheduleWakeup /loop or /goal, so bridge with a **sentinel file** the session
 checks on each wake. Verify `Get-TimeZone` (schtasks fires at host-local time) and add an in-script ET
 guard that refuses to act before the target. Validate with a `--selftest` path + `schtasks /Query`
-(Next Run Time). Reference: life-in-tabs `scripts/scheduled_hard_stop_1200et.py` (BL-1265).
+(Next Run Time).
