@@ -484,6 +484,10 @@ def main(argv=None):
     e.add_argument("--rate", type=float, help="order rate in batch units per day, if you can infer it")
     e.add_argument("--transit", default="3-7", help="business days in transit, e.g. 3-7")
     a = ap.parse_args(argv)
+    try:   # Windows consoles default to cp1252 and crash on non-ASCII page text
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
     if a.cmd == "parse":
         raw = read_page(a.page)
