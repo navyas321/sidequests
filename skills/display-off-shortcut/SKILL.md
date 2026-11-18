@@ -26,9 +26,10 @@ message — no third-party utility (no NirCmd) required.
 
 | File | Role |
 |------|------|
-| `scripts/Turn-Off-Display.ps1` | Sends the monitor-off or monitor-on message. Accepts `-Action off\|on` (default `off`). The `off` path has a 600 ms delay so the click/keypress that launched it doesn't instantly wake the screen. The `on` path also tries a best-effort DDC/CI hardware wake. |
+| `scripts/Turn-Off-Display.ps1` | Sends the monitor-off or monitor-on message. Accepts `-Action off\|on` (default `off`). The `off` path waits for the launching keys to be released, waits for the pointer to settle, then **guards** the off (see below). The `on` path also tries a best-effort DDC/CI hardware wake. |
 | `scripts/Turn-Off-Display.vbs` | Self-locating silent launcher — runs the `.ps1` via hidden PowerShell with **no console flash**. Finds the `.ps1` next to itself, so the pair relocates cleanly. |
 | `scripts/install-shortcut.ps1` | Copies the two scripts to a stable dir, creates the Start-menu `.lnk`, and assigns a **conflict-free** `Ctrl+Alt+<key>` hotkey. |
+| `scripts/display-hotkey-agent.py` | Optional Explorer-free hotkey owner (`pythonw`, `RegisterHotKey` + message loop, `--key`/`--ps1`). Use only when the `.lnk` hotkey is proven dead (see Notes). |
 
 ## Install
 
@@ -90,6 +91,35 @@ cancelled by any mouse movement or keypress at the desk. The machine stays fully
 awake. This is intentionally *not* DDC/CI, so no physical button or DDC command
 is needed to wake it.
 
+Because Windows re-powers the panel on **any** input, a single fire-and-forget
+broadcast loses the race constantly — the key-**up** of the hotkey itself is
+enough to wake the screen right back up. The `off` path therefore:
+
+1. **Waits for release** — polls `GetAsyncKeyState` until every key and mouse
+   button is physically up (max 5 s). Not a blind sleep.
+2. **Waits for the pointer to settle** — `-SettleMs` (default 350 ms) of a
+   stationary cursor, max 2 s.
+3. **Sends the off broadcast.**
+4. **Guards it** — for `-GuardMs` (default 4000 ms) it re-asserts the off unless
+   there is a *real* interaction: the cursor actually moves, or a key/button is
+   actually held. The moment either happens the guard releases, so waking at the
+   desk is unaffected.
+
+Step 4 deliberately does **not** use `GetLastInputInfo`: a faulty controller or
+Steam Input can pin the system idle timer at ~0 with synthetic zero-delta input
+(measured at 16 Hz on one host), which would release an idle-timer-based guard
+instantly and never re-assert. Cursor movement + physical key state are immune.
+
+Broadcasts use `SendMessageTimeout(SMTO_ABORTIFHUNG, 1000)`, never plain
+`SendMessage`: a `HWND_BROADCAST` `SendMessage` blocks until *every* top-level
+window pumps the message, and one frozen window hangs it **forever** (measured
+>30 s, leaking a stuck `powershell.exe` per press).
+
+`-DryRun` runs the whole timing/guard sequence and logs it without ever powering
+the panel down — use it to debug the off behaviour. The log is at
+`%LOCALAPPDATA%\display-off\turn-off-display.log` (last 300 lines kept);
+`-NoLog` disables it.
+
 ### `on` — software wake + best-effort DDC/CI hardware wake
 
 1. **Input nudge** — micro mouse move (1 px right, 1 px left). Wakes a panel
@@ -107,11 +137,28 @@ is needed to wake it.
 - **Display only.** This does not sleep, lock, or hibernate the PC. To also lock,
   chain `rundll32.exe user32.dll,LockWorkStation` before the monitor-off call.
 - **Hotkey latency.** Windows `.lnk` hotkeys aren't instant — allow a beat.
+- **Verifying "the hotkey didn't fire" from an agent session is a trap.** A
+  field investigation concluded Explorer's shortcut-hotkey dispatch was dead —
+  ground truth later proved every press HAD fired: the agent session and the
+  real desktop had *disjoint views of the same log path* (session-private file
+  virtualization), so the session read a stale private copy and judged the
+  chain dead. Before declaring a hotkey broken, read the log via a process
+  OUTSIDE the session (one-off scheduled task dumping to the repo/scratchpad).
+  If a hotkey genuinely stops working, `scripts/display-hotkey-agent.py` is a
+  proven Explorer-free alternative: a pythonw-resident agent that owns the
+  combo via RegisterHotKey + message loop and fires the ps1 with
+  `CREATE_NO_WINDOW` (strip the `.lnk` hotkey first so it can claim the combo).
 - **Fullscreen capture.** A fullscreen game/app may swallow the hotkey; the
   Start-menu entry and a desktop click still work.
 - **Stubborn monitors.** A few displays ignore the software power-off (driver /
   connection dependent). If yours does, fall back to a tested utility
   (`nircmd.exe monitor off`).
+- **"It turns off then wakes a second later."** Something is generating input.
+  Check the log for `real user interaction at +Nms` — if that fires with nobody
+  touching the machine, find the input source before blaming the script. A
+  drifting analog stick is the usual culprit: poll `XInputGetState` and watch
+  whether `dwPacketNumber` climbs while the sticks read neutral. A connected
+  controller with a broken stick will also stop the display ever auto-sleeping.
 - **DDC/CI caveat.** The hardware-wake path in `-Action on` works only on
   monitors that support DDC/CI (most modern displays do). If DDC/CI is disabled
   in the OSD or the monitor doesn't support it, the command is silently ignored

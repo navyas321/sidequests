@@ -19,8 +19,14 @@ import sys
 import re
 import json
 
+# Anchor to a limit context, then extract the reset clock. Handles both the terse
+# "session limit ... resets 6:10am (America/New_York)" and the canonical Claude Code
+# "Claude usage limit reached. Your limit will reset at 3pm (America/New_York)." phrasings
+# (the "at"/"by" between "reset" and the clock, and the "5-hour limit" prefix).
 RESET_RE = re.compile(
-    r"(?:session|usage)\s+limit[^\n]*?resets?\s+([0-9: ]+[ap]m(?:\s*\([^)]+\))?)",
+    r"(?:session|usage|hour[- ]?)\s*limit[^\n]*?"
+    r"reset(?:s)?(?:\s+(?:at|by))?\s+"
+    r"([0-9]{1,2}(?::[0-9]{2})?\s*[ap]m(?:\s*\([^)]+\))?)",
     re.IGNORECASE,
 )
 LIMIT_HINTS = ("session limit", "usage limit", "rate_limit", "rate limit",

@@ -233,10 +233,27 @@ is plausible and the human becomes the verification loop.
   keep an immutable feature/test list as JSON (removing tests is unacceptable);
   read git history + progress log at session start; **one feature per session**;
   smoke-test prior work before new work.
+- **CI hygiene = cost hygiene:** if an agent (or the server) auto-commits data
+  files on a schedule — a backlog store, a journal, a cache — an unscoped
+  `on: push` CI workflow runs on EVERY one of those data-only commits and
+  silently bills CI minutes for a change that carries no code. Scope the workflow
+  with `paths-ignore` (`data/**`, `docs/**`, `**/*.md`) or a `paths:` allow-list
+  of the code dirs, so only code pushes trigger it. And never leave a
+  chronically-**red** workflow running — a CI that fails on every push wastes
+  minutes twice and trains everyone to ignore the signal; fix it or disable it.
+  (One personal repo burned ~90% of its free GitHub Actions minutes this way; see
+  the `github-actions-cost-control` skill.)
+- **No agent is the last reviewer of its own work.** Every substantive
+  deliverable gets checked by a different context — a separate session, a
+  different model or vendor, or an independent subagent that did not author it.
+  A fork of the authoring context inherits its blind spots (in one audit it
+  caught every technical defect and missed every scope defect). Never accept
+  "I verified it" from the author, yourself included: ask which command ran and
+  whether it *could* have caught the defect class. See `cross-agent-review`.
 
 
 <!-- lesson:hard-stop-1200et-2026-07-07 -->
-## Lesson (2026-07-07): autonomous scrum stack, proven end-to-end (BL-1252)
+## Lesson (2026-07-07): autonomous scrum stack, proven end-to-end
 A fully autonomous SDLC ran with zero user input: manager-watchdog decomposed an epic into role-tagged
 children ([SDE1]/[SDE2]/[SDE3]/[QA]/[Release] title tags), the **persistent-session-drainer** autopilot
 (one long-lived session draining in-place with amortized context -- the winning default over classic +
@@ -245,4 +262,4 @@ Guardrails that made it work: (a) type epics `epic` so the pickup gate never han
 drainer; (b) a realistic headless acceptance bar (`analyze` clean + `test` green, NOT device/emulator
 verification the host can't run); (c) benign empty-queue drainer exit == 0, not an error (avoids
 false-alarm 'Failed fast' cards); (d) 'who is working' views must union coord actors AND the owners of
-inprogress backlog items. Reference: life-in-tabs BL-1252 / memory autonomous-scrum-e2e-proof.
+inprogress backlog items.

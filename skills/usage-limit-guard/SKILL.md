@@ -6,10 +6,12 @@ description: >-
   this die on the 5-hour limit", "make this survive usage limits", "resume after
   the limit resets", "checkpoint so a fresh session can continue", "the watcher
   died and lost its work", "run this headless overnight", "how much usage am I
-  burning", or whenever building/hardening any repo-backed loop (backlog watcher,
-  /loop, nightly agent) that must make progress across limits and restarts.
+  burning", "pause/stop everything to save credits", "why is usage still
+  dropping after I paused", or whenever building/hardening any repo-backed loop
+  (backlog watcher, /loop, nightly agent) that must make progress across limits
+  and restarts.
 allowed-tools: Bash, Read, Write, Edit
-argument-hint: "[usage|guard|resume|checkpoint]"
+argument-hint: "[pause|usage|guard|resume|checkpoint]"
 ---
 
 # usage-limit-guard
@@ -54,6 +56,75 @@ for any repo and any tech stack. `git` is the only hard requirement.
   **separate monthly credit pool** — they no longer compete with interactive
   sessions. So a headless watcher may exhaust *credits* rather than the 5h/weekly
   caps; treat both as "the limit" and back off the same way.
+
+---
+
+## Flow 0 — Actually stopping the drain (`pause`)
+
+A user asking you to **"pause" / "stop everything" to conserve credits is asking you to make
+credit consumption STOP, not to narrate that it stopped.** Two independent ways a "pause" can
+silently fail to do that (both observed in production):
+
+1. **A "paused" reply does not disarm an active `/goal`'s Stop hook.** If a `/goal` loop's
+   completion condition (e.g. "BOTH X and Y done") isn't fully met, its Stop hook re-fires on
+   **every** turn end regardless of what you just said. Replying "Paused at your request,
+   checkpointed" satisfies the *user* but not the hook — it re-triggers immediately, forcing
+   another full-priced completion, in a loop, for as long as the session stays open. This is
+   expensive even when short: if anything mid-session caused a **prompt-cache miss** (e.g. a model
+   change), **every one of those retries reprocesses the entire cached context from scratch** —
+   one observed turn billed ~500k cache-creation tokens for a one-line "Paused." reply. The
+   transcript can show ten consecutive "Paused"/"Holding" turns, each a real, large charge, while
+   the user watches credits drop and reasonably believes "everything was stopped" because the
+   *words* said so. **The only real stop is to end the condition that re-arms the hook** — satisfy
+   it, cancel/end the `/goal` itself, or close the session — not to keep answering it. If you must
+   keep the session open, say so explicitly and flag that further Stop-hook nags keep costing
+   real credits until the goal is cancelled.
+2. **"Stop everything" is machine-wide, not project-scoped.** Disabling the current repo's own
+   scheduled tasks is NOT "everything". List every enabled scheduled task
+   (`Get-ScheduledTask | Where-Object State -eq Ready` on Windows, `crontab -l` + systemd timers
+   elsewhere) and check **every** one that spawns `claude` / `claude -p` **across every project on
+   the machine**, not just the ones this repo's notes know about. A sibling project's bot or
+   watcher draws from the **same shared credit pool** and keeps firing on its own schedule,
+   invisibly, after the requested project is fully quiesced. Report the state of ALL
+   claude-spawning tasks, not only the ones native to the current working directory.
+
+Verify a real pause with **evidence**, not narration: re-list scheduled tasks (none enabled should
+spawn `claude`), confirm no `/goal` is still armed, and check that no new transcript turns are
+being appended after the "pause" reply.
+
+**Pattern for a genuine "stop the drain" button:** a machine-wide, *behavior-based* (not
+name-list-based) pause. Walk every scheduled task's action — following `.vbs`/`.ps1`/`.cmd`
+wrapper indirection a few hops deep — looking for an actual `claude` / `claude -p` invocation;
+disable every match that is currently enabled; record exactly what you disabled to a state file so
+`--resume` restores precisely those (never a task that was already off, never one you didn't
+touch). A `--dry-run` lists matches with no changes.
+
+**Scheduled hard stop at a fixed clock time.** When the ask is "hard-stop at exactly HH:MM, not
+before", register an OS-scheduled job at that local time (confirm the host's time zone first —
+`[System.TimeZoneInfo]::Local.Id` / `timedatectl`) running a **pure-stdlib** script — never a
+`claude` spawn, since the trigger is usually usage exhaustion and a model call may be blocked at
+fire time. The script refuses to act before the target time (an in-script guard, not just the
+trigger). An OS scheduler cannot reach into a *live* interactive session to cancel its
+`/loop` / `ScheduleWakeup` chain or abandon a `/goal`, so bridge that with a **sentinel file** the
+live session checks on every wake and honors. Pre-author any nuanced content (memory, skill edits,
+resumption notes) while context is fresh and embed it as literal strings the script writes
+verbatim — don't defer "lessons learned" to a hypothetical future session, and don't make the
+script fake judgment it doesn't have. Validate with a `--selftest` / `--dry-run` path that
+exercises every step with zero side effects, then confirm the scheduler's next run time is the
+target moment.
+
+**Caveat — check for an in-flight duplicate build before shipping your own.** Two independent
+agent sessions once built two different hard-stop mechanisms for the same ticket concurrently and
+ended up with two jobs both armed for the same minute. Context recall surfaces *related* prior
+items but not a sibling's *live in-flight* build of the exact same one — before registering a new
+scheduled job, check `git log --oneline` and the board's run files for a suspiciously fresh
+commit/run on the same ticket id.
+
+**Caveat — an orphan-reaper can kill live siblings, not just dead ones.** A "reap orphaned
+`claude -p`" step that kills any `claude -p` whose parent is *named* `python.exe` / `pythonw.exe`,
+without checking whether that parent is alive and legitimately driving it, kills real in-flight
+work on a host running several agent sessions. Always dry-run a pause/reap script first and
+eyeball what it would actually kill.
 
 ---
 
