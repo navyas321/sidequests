@@ -5,7 +5,8 @@ description: >-
   bump the beta/dev version, generate a changelog from git history, and (only on
   explicit request) tag a stable release. Use when the user says "cut a release",
   "make a stable release", "bump the version", "increment beta", "tag vX.Y.Z",
-  "what should the next version be", "release this", or "ship a release". Honors
+  "what should the next version be", "release this", "ship a release", "write the
+  release notes", or "the preflight won't let me cut this stable". Honors
   a continuous-beta / tag-cut-stable model where beta always runs ahead of
   stable. Project-agnostic; works in any git repo. Reads the repo's own
   RELEASING.md / docs if present and follows it over these defaults.
@@ -18,7 +19,6 @@ argument-hint: "[patch|minor|major | stable | vX.Y.Z]"
 A disciplined, low-risk release flow for any repo. **If the repo has its own
 `RELEASING.md`, `docs/RELEASING.md`, `CONTRIBUTING`, or a versioning section in
 `CLAUDE.md`/`README`, read it first and follow it — it overrides these defaults.**
-(In life-in-tabs, the concrete runbook is `docs/RELEASING.md`.)
 
 ## Core model: continuous beta, tag-cut stable
 
@@ -53,18 +53,75 @@ If unsure, inspect what changed since the last tag and infer:
 ## Flow B — cut a stable tag (only on explicit request)
 
 1. Green test/smoke gate — mandatory.
-2. Choose the stable number (usually current beta minus its pre-release suffix,
-   or the number the user names).
-3. **Changelog** from the last tag:
-   `git log --oneline <last-tag>..HEAD` -> summarize notable items into notes.
-4. Create an **annotated** tag and push it:
+2. Choose the stable number: the current beta minus its pre-release suffix (or
+   the number the user names). Stable is what the beta validated — never a
+   number no beta ever ran.
+3. **Preflight** — run the deterministic gate before tagging:
+   ```
+   python ${CLAUDE_SKILL_DIR}/scripts/release_preflight.py --stable vX.Y.Z \
+       [--feature-justification "<the user-facing wave this ships>"] \
+       [--breaking-justification "<what breaks>"] [--allow-same-day "<reason>"] \
+       [--version-file VERSION|package.json|pyproject.toml]
+   ```
+   It checks version file == stable, the `vX.Y.Z` format, one stable per day,
+   bump-class paperwork (a minor needs a written feature justification, a major a
+   breaking one), and number burning. Exit 2 = do not tag. Paperwork failures
+   are cleared by writing the honest reason; blocking failures are not.
+4. **Release notes** from the last tag (see "Release notes people can read"):
+   `git log --oneline <last-tag>..HEAD`, then write them for a user, not a
+   reviewer. Keep them in the repo (e.g. `docs/release-notes-vX.Y.Z.md`).
+5. Create an **annotated** tag and push it:
    ```
    git tag -a vX.Y.Z -m "<project> vX.Y.Z - <summary>"
    git push origin vX.Y.Z
    ```
-   (or `gh release create vX.Y.Z --notes-file NOTES.md` for a GitHub release.)
-5. **Advance the beta** past the tag (e.g. tagged `v2.5.3` -> set version to
+   and, where the project publishes GitHub releases,
+   `gh release create vX.Y.Z --title "<project> vX.Y.Z - <summary>" --notes-file <notes>`.
+6. **Advance the beta** past the tag (e.g. tagged `v2.5.3` -> set version to
    `2.5.4-beta`) and commit, so beta resumes ahead of stable.
+7. **Verify, then get it reviewed.** `git ls-remote --tags origin vX.Y.Z` shows
+   the tag; `gh release view vX.Y.Z` shows it published (not draft or
+   prerelease, unless intended); the version file is on the next beta; any
+   "latest stable" link resolves. Then have a reviewer in a different context
+   re-check the tag, the notes against the commit range, and the beta bump
+   before you report the release as done.
+
+### Catch-up stables (several betas at once)
+
+In a continuous-beta repo where stable is cut only on request, one stable often
+covers several minors (`v11.1.0 -> v11.4.3`). A naive anti-burn rule ("advance
+at most one minor") plus "stable == beta" is then **unsatisfiable**: no number
+passes and every cut needs an override flag — and an override needed on the
+normal path is a broken default that trains everyone to pass it blindly.
+
+Make the guard evidence-based instead: every beta bump is a committed change to
+the version file, so its git history records which levels the beta actually
+ran. A catch-up passes when the walk from the last stable to the target moves
+one level at a time and the beta held every level on the way (the preflight
+reads this from `git log -p -- <version file>`). Jumping to a minor or major no
+beta ever ran is still number burning and still fails. The catch-up still pays
+its paperwork: a minor-class catch-up needs `--feature-justification` naming the
+features it ships. Keep a raw override (`--allow-catchup "<reason>"`) only for
+a repo whose version history cannot be read (shallow clone, rewritten history);
+needing it on a normal cut is a bug to report.
+
+## Release notes people can read
+
+Notes are for the person using the software, not for the reviewer of the diff.
+
+- **Lead with the effect.** "The portfolio card refreshes itself when its data
+  is old" — not "TKT-123: add auto-refresh hook". Ticket ids and commit hashes
+  go in parentheses at most, never as the headline.
+- **Sections:** New / Fixed / (Privacy or Security, when relevant) /
+  Housekeeping / **Known issues**. Known issues are honest: name what is still
+  broken or unverified and what the user should do about it.
+- **Cumulative.** A catch-up stable describes everything since the *previous
+  stable*, across every beta in between; a hotfix's notes carry the whole
+  minor line so far, so the latest release page is complete on its own.
+- **Title** `<project> vX.Y.Z — <short summary of the headline changes>`;
+  keep the prefix consistent across releases.
+- **No point-in-time trivia** a reader can't use (internal counts, test
+  totals); put those in the release commit or the tracker.
 
 ## Guardrails
 
@@ -96,6 +153,11 @@ last stable tag** before anyone noticed.
   Definition of Done, right after the smoke-green commit (patch for a
   fixes/quality wave, minor when a feature/endpoint landed). Never leave the beta
   `VERSION` stale while dozens of commits pile up.
+- **Make the bump class deterministic.** Left to judgment, an autopilot always
+  picks patch: one repo sat on the same minor through ~19 patch bumps while whole
+  new pages and subsystems shipped. Decide it from the diff instead — a wave that
+  adds a new page/screen or registers a new API endpoint is a **minor**,
+  anything else a patch — and have the bump script pick it.
 - **Proactively cut stable at milestones.** When unreleased work since the last
   tag gets large (rule of thumb: **>~30 items, or a redesign/architecture/breaking
   change landing**), surface it and — with user go-ahead (stable stays
