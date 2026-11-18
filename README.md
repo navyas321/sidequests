@@ -45,7 +45,8 @@ Claude, or just `python` them directly.
 | --- | --- |
 | **[watcher-reliability](skills/watcher-reliability/SKILL.md)** | Preflight pattern for headless Claude/MCP watchers — verify auth, MCP servers, codec, and repo state up front so scheduled runs fail loud at the start, not silently mid-run. Ships `watcher-preflight.ps1`. |
 | **[watcher-cleanup](skills/watcher-cleanup/SKILL.md)** | Scan for and clean dead/orphaned custom watchers — reconcile the prompt-file + scheduled-task + health-record trio so config litter and stale health entries don't accumulate. |
-| **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote session survive desktop-app restarts/updates/crashes — move the schedule into Windows Task Scheduler (headless `claude -p`) + an app watchdog. |
+| **[durable-claude-automation](skills/durable-claude-automation/SKILL.md)** | Make scheduled Claude runs and the remote session survive desktop-app restarts/updates/crashes — move the schedule into Windows Task Scheduler (headless `claude -p`) + an app watchdog, and resolve the real CLI so a broken PATH wrapper can't silently fail every spawn. |
+| **[shipment-watch](skills/shipment-watch/SKILL.md)** | Watch a vendor's batch-shipping dashboard ("orders 3214xx–3237xx shipped") for the batch covering your order: notify once, retry delivery, self-disarm, injection-safe messages — then estimate arrival from the page's own history. Ships `shipwatch.py` + tests. |
 
 ### 🏃 Dev SDLC (agile-scrum)
 
