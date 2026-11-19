@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Claude Code plugin](https://img.shields.io/badge/Claude%20Code-plugin-7c5cff)
-![skills](https://img.shields.io/badge/skills-27-2ea043)
+![skills](https://img.shields.io/badge/skills-37-2ea043)
 
 What started as two one-off migrations (Google Photos → iCloud de-dupe, and
 song/source identification from a clip) has grown into a catalog of runbooks
@@ -25,7 +25,7 @@ Claude, or just `python` them directly.
 
 ## Catalog
 
-27 skills, grouped by theme. Each links to its runbook; one line is the gist.
+Skills grouped by theme. Each links to its runbook; one line is the gist.
 
 ### 🤖 Building agents & multi-agent orchestration
 
@@ -74,7 +74,7 @@ Claude, or just `python` them directly.
 | **[usage-limit-guard](skills/usage-limit-guard/SKILL.md)** | Keep a repo-backed autonomous loop making progress across Claude's 5h/weekly limits and outages — read local token-burn, detect the limit headlessly, and resume from durable repo state instead of `--resume`. |
 | **[github-actions-cost-control](skills/github-actions-cost-control/SKILL.md)** | Diagnose and stop GitHub Actions free-tier minute burn — find the biggest burners (paused-project crons, macOS 10× runners, burst-commit CI) and fix them. |
 
-### 🎮 Gaming rig & desktop (Windows)
+### 🎮 Gaming rig, handhelds & desktop (Windows)
 
 | Skill | What it does |
 | --- | --- |
@@ -82,6 +82,13 @@ Claude, or just `python` them directly.
 | **[hdr-gaming-setup](skills/hdr-gaming-setup/SKILL.md)** | Set up and PROVE the Windows 11 HDR gaming stack on an OLED + NVIDIA RTX rig — monitor OSD, Windows HDR Calibration (HGIG), RTX HDR + Dynamic Vibrance, and a driver-log engagement test. |
 | **[display-off-shortcut](skills/display-off-shortcut/SKILL.md)** | Start-menu shortcut + conflict-free `Ctrl+Alt+<key>` hotkey that turns the monitor off while the PC keeps running (downloads/streaming continue); wake with any mouse move or keypress. |
 | **[isolated-streaming-host-mock](skills/isolated-streaming-host-mock/SKILL.md)** | Stand up an ISOLATED mock game-streaming host (Sunshine/Apollo/Vibepollo) next to a real one for testing a client — copied prefix + offset ports + virtual-display + kill-by-port — without disrupting real gaming or the real host. Ships `start-mock.ps1` / `stop-mock.ps1` / `mock.conf`. |
+| **[game-mod-setup](skills/game-mod-setup/SKILL.md)** | Install a game plus a community mod list so every change is reversible and proven from the loader's own log: drive and source checks, launcher/ini traps, progress with real ETAs, copy-verify-switch moves, and a ledger to snapshot, diff, park and hash-verify-restore mods. Ships `modledger.py` + tests. |
+| **[game-render-injection](skills/game-render-injection/SKILL.md)** | Inject an upscaler or neural-rendering model (e.g. DLSS 5 via an OptiScaler fork, a ReShade add-on chain, or a capture overlay) safely: anti-cheat and publisher-policy check first, signed model files only, placement next to the real shipping exe, proof from dispatch logs, and a per-game on/off ledger. |
+| **[settings-ab-test](skills/settings-ab-test/SKILL.md)** | Answer "which setting is better?" with evidence: pin the installed version, read its docs before naming an option, run alternating A/B runs, capture PresentMon frame timing, and judge with an exact permutation test (runs as samples) that says when a difference is not proven and how many runs would settle it. Ships `abtest.py` + tests. |
+| **[network-stutter-triage](skills/network-stutter-triage/SKILL.md)** | Find why streaming stutters without breaking the link: baseline first, one interleaved ping loop to decide "network or that one device", real adapter limits (streams, USB port speed), one change at a time with a revert, drivers from trusted catalogs only. Ships `interleaved_ping.ps1` + `ping_report.py` (+ tests). |
+| **[windows-host-cleanup](skills/windows-host-cleanup/SKILL.md)** | Reclaim disk space (list first, reversible, in-use aware), show the whole autostart list with ranked advice and OS-native disables, and diagnose a process that will not die instead of rebooting it away. Ships a read-only `autostart_inventory.ps1` covering the common autostart sources (Sysinternals Autoruns for the deep ones). |
+| **[handheld-ftp-backup](skills/handheld-ftp-backup/SKILL.md)** | Manage an Android handheld's storage over Wi-Fi FTP: inventory, manifest-backed backup into a fresh dated folder, safe save transfers between emulators and devices, SD reformat for files over 4 GB, and a verified restore that never overwrites a newer save on the device; plus the scoped-storage / volume-ID / app-update save-path traps. Ships `ftpdu.py` / `ftpbackup.py` / `ftprestore.py` (+ tests). |
+| **[machine-config-journal](skills/machine-config-journal/SKILL.md)** | Keep a private repo per machine or device that records every config change with its before-state, verification and exact reversal, plus a scannable README change log; reviews amend entries instead of erasing them. Ships `journal.py` (init / add) + tests. |
 
 ### 🎬 Media & migration (the original side quests)
 
@@ -496,7 +503,9 @@ standalone — e.g. `agent-coordination-gates/coord.py` + `gates.py`,
 `detect_limit.py`), `video-understanding/scripts/videoscan.py` (+ `selftest.py`;
 `game-walkthrough` and `source-finder` ship byte-identical copies, kept honest by
 `checksync.py`), `source-finder/scripts/` (audio/fingerprint/transcribe),
-`photo-reconciler/scripts/reconcile.py`, and `watcher-reliability/watcher-preflight.ps1`.
+`photo-reconciler/scripts/reconcile.py`, `game-mod-setup/scripts/modledger.py`, `settings-ab-test/scripts/abtest.py`,
+`network-stutter-triage/scripts/` (`interleaved_ping.ps1`, `ping_report.py`), `handheld-ftp-backup/scripts/` (FTP
+inventory, backup, restore), `machine-config-journal/scripts/journal.py`, and `watcher-reliability/watcher-preflight.ps1`.
 
 ## Updating
 
